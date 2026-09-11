@@ -1,3 +1,3 @@
-"""MyloWare - Llama Stack multi-agent video production platform."""
+"""AISMR - Llama Stack multi-agent video production platform."""
 
 __version__ = "0.1.0"

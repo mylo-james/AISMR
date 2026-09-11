@@ -2,12 +2,12 @@
 
 **Status**: Accepted
 **Date**: 2025-12-12
-**Deciders**: MyloWare Team
+**Deciders**: AISMR Team
 **Tags**: architecture, workflows, orchestration, state-management
 
 ## Context
 
-MyloWare v1 used LangChain + LangGraph for both agent logic and orchestration. v2 rewrote the AI layer on Llama Stack for direct control, but we still needed robust workflow orchestration capabilities:
+AISMR v1 used LangChain + LangGraph for both agent logic and orchestration. v2 rewrote the AI layer on Llama Stack for direct control, but we still needed robust workflow orchestration capabilities:
 
 - **Stateful workflows**: Multi-step video production with state persistence
 - **Human-in-the-loop (HITL)**: Approval gates that pause and resume

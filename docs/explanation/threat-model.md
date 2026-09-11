@@ -1,6 +1,6 @@
 # Threat Model (Focused + Practical)
 
-This is a pragmatic threat model for MyloWare. It’s not exhaustive; it focuses on the highest-risk surfaces for a
+This is a pragmatic threat model for AISMR. It’s not exhaustive; it focuses on the highest-risk surfaces for a
 workflow system that executes external provider work via webhooks and processes untrusted URLs.
 
 ## Assets

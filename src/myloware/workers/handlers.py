@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -17,8 +18,8 @@ from myloware.services.openai_videos import (
     download_openai_video_content_to_tempfile,
     retrieve_openai_video_job,
 )
-from myloware.services.render_local import LocalRemotionProvider
 from myloware.services.remotion_urls import normalize_remotion_output_url
+from myloware.services.render_local import LocalRemotionProvider
 from myloware.services.transcode import transcode_video
 from myloware.storage.models import ArtifactType, RunStatus
 from myloware.storage.repositories import ArtifactRepository, JobRepository, RunRepository
@@ -88,6 +89,88 @@ async def handle_job(
 
     This function should be called inside a short-lived DB session.
     """
+    if job_type == "studio.cleanup":
+        if run_id is None:
+            raise ValueError("studio.cleanup requires run_id")
+        from sqlalchemy import select
+
+        from myloware.config.studio import get_studio_settings
+        from myloware.storage.database import get_async_session_factory
+        from myloware.storage.studio_models import StudioGalleryProjectionIntent
+        from myloware.storage.studio_store import StudioError, StudioStore
+        from myloware.studio.library_service import StudioLibraryService
+        from myloware.studio.portfolio_runtime import open_portfolio_library
+
+        await session_job_repo.session.rollback()
+        store = StudioStore(get_async_session_factory(), get_studio_settings())
+        # Cross-mode publication is driven solely by source intents committed
+        # with explicit consent.  It completes before any source retention can
+        # remove its final, and remains retry-safe after either database restarts.
+        try:
+            async with open_portfolio_library(store) as portfolio:
+                await portfolio.initialize()
+                async with store.factory() as source_session:
+                    intents = (
+                        await source_session.scalars(
+                            select(StudioGalleryProjectionIntent).where(
+                                StudioGalleryProjectionIntent.run_id == run_id,
+                                StudioGalleryProjectionIntent.state.in_(
+                                    ("pending", "projecting", "complete")
+                                ),
+                            )
+                        )
+                    ).all()
+                for intent in intents:
+                    if intent.state != "complete":
+                        await portfolio.project_source_intent(
+                            intent.id,
+                            source_final=store.config.media_root / str(run_id) / "final.mp4",
+                        )
+                    # A persisted acknowledgement proves activation succeeded.
+                    # Revisit it after a crash between acknowledgement and
+                    # source cleanup, even if that library entry later retired.
+                    from myloware.workers.claims import require_current_claim
+
+                    async with store.factory() as source_session, source_session.begin():
+                        await require_current_claim(source_session)
+                    await asyncio.to_thread(
+                        StudioLibraryService(store).files.remove_projected_source, run_id
+                    )
+                    await StudioLibraryService(store)._renderer_copy(await store.get_run(run_id))
+                await portfolio.reconcile()
+        except StudioError as exc:
+            if exc.code not in {"library_database_missing", "library_media_root_missing"}:
+                raise
+        # Cleanup has its own durable retry budget. A cleanup failure must never
+        # change an accepted video's state or construct paid provider clients.
+        await StudioLibraryService(store).cleanup(run_id)
+        return
+
+    if job_type == "studio.advance":
+        if run_id is None:
+            raise ValueError("studio.advance requires run_id")
+        from myloware.config.studio import get_studio_settings
+        from myloware.storage.studio_store import StudioError
+        from myloware.studio.service import build_studio_service, open_studio_service
+        from myloware.workflows.langgraph.studio import advance_monthly_workflow
+
+        # Release the worker's read transaction before stage owners commit their
+        # short transactions. Provider calls never hold the queue row lock.
+        await session_job_repo.session.rollback()
+        try:
+            done = await advance_monthly_workflow(run_id)
+        except StudioError as exc:
+            # The recovery store must share the live composition root's cleanup.
+            # Do not leave an OpenAI or provider client open after a failed stage.
+            async with open_studio_service(build_studio_service) as service:
+                await service.store.stop(run_id, exc.code)
+            return
+        if not done:
+            raise JobReschedule(
+                reason="studio_waiting", retry_delay_seconds=get_studio_settings().poll_seconds
+            )
+        return
+
     if job_type == JOB_RUN_EXECUTE:
         if run_id is None:
             raise ValueError("run.execute requires run_id")

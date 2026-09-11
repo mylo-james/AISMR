@@ -1,16 +1,19 @@
-# MyloWare Makefile
+# AISMR Makefile
 # Common commands for development workflow
 
 .PHONY: help install dev-install test test-fast test-parity test-live lint format type-check ci docker-up docker-down clean eval openapi perf sbom e2e-local demo demo-safe demo-run demo-smoke security db-migrate db-migrate-sql db-reset
 .PHONY: repo-scan preflight preflight-full
 
 # Default knobs (override as needed)
+HOST ?= 127.0.0.1
+PORT ?= 8000
+DEMO_UI_PORT ?= 8311
 BASE_URL ?= http://localhost:8000
 API_KEY ?= dev-api-key
 
 # Default target
 help:
-	@echo "MyloWare Development Commands"
+	@echo "AISMR Development Commands"
 	@echo "=============================="
 	@echo ""
 	@echo "Setup:"
@@ -73,42 +76,7 @@ demo-safe:
 
 demo-run:
 	cp -n .env.example .env || true
-	@PYTHONPATH=src python - <<-'PY'
-	from __future__ import annotations
-
-	from pathlib import Path
-
-	env_path = Path(".env")
-	if not env_path.exists():
-	    raise SystemExit(".env missing; run `make demo-safe` first.")
-
-	overrides = {
-	    "DISABLE_BACKGROUND_WORKFLOWS": "false",
-	    "WORKFLOW_DISPATCHER": "inprocess",
-	}
-
-	lines = env_path.read_text(encoding="utf-8").splitlines(keepends=True)
-	seen: set[str] = set()
-	out: list[str] = []
-	for raw in lines:
-	    line = raw.rstrip("\n")
-	    if not line or line.lstrip().startswith("#") or "=" not in line:
-	        out.append(raw)
-	        continue
-	    key, _value = line.split("=", 1)
-	    key = key.strip()
-	    if key in overrides:
-	        out.append(f"{key}={overrides[key]}\n")
-	        seen.add(key)
-	    else:
-	        out.append(raw)
-
-	for key, value in overrides.items():
-	    if key not in seen:
-	        out.append(f"{key}={value}\n")
-
-	env_path.write_text("".join(out), encoding="utf-8")
-	PY
+	python scripts/configure_demo.py
 	@echo "Demo env updated to RUN mode (background workflows enabled, in-process dispatcher)."
 
 demo-smoke:
@@ -250,7 +218,7 @@ clean:
 
 # Start API server in development mode
 serve:
-	PYTHONPATH=src uvicorn myloware.api.server:app --reload --host 0.0.0.0 --port 8000
+	PYTHONPATH=src uvicorn myloware.api.server:app --reload --host $(HOST) --port $(PORT)
 
 # Run a single workflow (for testing)
 run-workflow:
@@ -261,3 +229,8 @@ run-workflow:
 watch-traces:
 	@echo "Watching Jaeger traces... (Ctrl+C to stop)"
 	@python scripts/watch_traces.py
+
+# Serve the existing static demo against the local API on port 8000.
+.PHONY: demo-ui
+demo-ui:
+	python -m http.server $(DEMO_UI_PORT) --bind $(HOST) --directory web/demo

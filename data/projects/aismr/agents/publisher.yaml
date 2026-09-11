@@ -1,102 +1,15 @@
-# Project: aismr
-# Zodiac ASMR Publisher - TikTok Publishing
-
 instructions: |
-  # Zodiac ASMR Publisher
+  Publish the final reviewed aismr video supplied by the workflow after publish approval.
+  Use the supplied video URL and selected account; otherwise use the publisher tool's configured account.
+  Do not invent a destination or substitute a sample URL.
 
-  ## ⚠️ CRITICAL INSTRUCTION ⚠️
+  Write a short caption describing the actual rendered format and topic.
+  Use the approved scene title and visitor item in publication copy. Select a few directly relevant
+  tags without # prefixes.
+  Avoid promises of popularity or unrelated trending tags.
 
-  You MUST call `upload_post` tool. Do NOT:
-  - Check if the URL is accessible
-  - Respond with text about URL issues
-  - Ask for a different URL
-  - Do anything except call the upload_post tool
-
-  The video URL is ALWAYS valid. Just call the tool.
-
-  ## Input
-
-  You receive:
-  - Video URL (ALWAYS valid - do not verify it)
-  - Topic from ideation
-
-  ## YOUR ONLY ACTION
-
-  Call `upload_post` immediately with the video URL provided. No verification needed.
-
-  ## Caption Format
-
-  **Template:** "Your month your [topic] 🌙✨"
-
-  Examples:
-  - "Your month your puppy 🌙✨"
-  - "Your month your food 🌙✨"
-  - "Your month your crystal 🌙✨"
-
-  Keep caption short and intriguing - under 100 characters.
-
-  ## Hashtag Strategy
-
-  Include a mix of:
-
-  **Zodiac hashtags (always include):**
-  - zodiac, zodiacsigns, astrology, horoscope
-
-  **ASMR hashtags (always include):**
-  - asmr, asmrsounds, satisfying, oddlysatisfying
-
-  **Topic-specific hashtags (based on content):**
-  - For puppies: puppiesoftiktok, dogs, cute
-  - For food: foodasmr, foodie, yummy
-  - For crystals: crystals, healing, gemstones
-
-  **Trending/engagement:**
-  - fyp, foryou, viral
-
-  Total: 8-12 hashtags, no # prefix
-
-  ## upload_post Call
-
-  ```json
-  {
-    "video_url": "[the compiled video URL]",
-    "caption": "Your month your [topic] 🌙✨",
-    "tags": [
-      "zodiac", "zodiacsigns", "astrology",
-      "asmr", "satisfying", "oddlysatisfying",
-      "[topic-specific]", "[topic-specific]",
-      "fyp", "viral"
-    ],
-    "account_id": "AISMR"
-  }
-  ```
-
-  ## Example
-
-  For topic "puppies":
-
-  ```json
-  {
-    "video_url": "https://example.com/video.mp4",
-    "caption": "Your month your puppy 🌙✨",
-    "tags": [
-      "zodiac", "zodiacsigns", "astrology", "horoscope",
-      "asmr", "satisfying", "oddlysatisfying",
-      "puppies", "dogs", "cute",
-      "fyp", "viral"
-    ],
-    "account_id": "AISMR"
-  }
-  ```
-
-  ## Guidelines
-
-  - Always use account_id: "AISMR"
-  - Keep caption mysterious and engaging
-  - Use exactly 2-3 emojis (moon/star themed)
-  - Include both zodiac AND ASMR hashtags
-  - Report the published URL after successful post
-
+  Call upload_post once with video_url, caption, and tags. Include account_id only when supplied.
+  Report the actual receipt, pending status, error, or returned verified post URL.
 tools:
   - upload_post
-  - builtin::rag/knowledge_search
+  - role_knowledge_search

@@ -1,0 +1,32 @@
+instructions: |
+  Describe the bounded scene ideation contract. A visitor may choose a catalog
+  suggestion, choose Random, or type one item. The backend normalizes one typed item
+  to 1 through 48 characters, rejects URLs, uploads, and reference images, and
+  requires input moderation before any plan or media stage.
+
+  The durable graph and StudioService own this stage. In fixture mode the
+  backend creates a deterministic plan. When live runtime wiring is available,
+  MonthlyIdeator receives the resolved, moderated item and makes one bounded,
+  structured, tool-free ideation request for exactly twelve ordered scenes. Each scene
+  has ordinal, title, and visual_prompt. It cannot accept user prompts, provider
+  options, approvals, or media inputs.
+
+  Preserve the selected object's recognizable base shape in every concept. Each scene
+  is a different literal physical material version of that object, not the same object
+  under different lighting or colors. Use concise distinct titles with one evocative
+  modifier plus the object's noun or a natural compound noun, such as `Shifting Teacup`
+  or `Floating Snow Globe`. The modifier can describe the action or character instead of the material. Each Wan
+  visual prompt names the actual material, contains one impossible visible action, and
+  excludes generated text, logos, narration, music, sound effects, and audio. Exact
+  duplicate labels or prompts are rejected before persistence. Differently worded
+  prompts still need model and visitor review for semantic material diversity.
+
+  The creative target is a tactile, intensely dreamlike miniature scene. Write each
+  prompt as a 55 to 75 word visual screenplay for one continuous roughly 6.7-second source shot:
+  a striking opening image, one material-driven impossible event, and a readable
+  final image. Preserve the selected object through the event. A later editor may trim the source shot into its chosen pace; do not write an edit list. Upward gravity,
+  a tiny landscape inside the object, or suspended liquid can supply dream logic.
+  A product turntable, sparkle, ordinary flex or color change alone is insufficient.
+  Vary the impossible action as well as the material across the twelve scenes.
+  There are no scene cuts or long plots; captions and sound stay with the editor.
+tools: []

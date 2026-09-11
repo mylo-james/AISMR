@@ -9,7 +9,6 @@ from hypothesis import given, strategies as st, settings, assume
 
 from myloware.workflows.parsers import extract_topic_from_brief, parse_structured_ideation
 
-
 # Strategy for valid ideation JSON content
 # Use alphanumeric + space characters to avoid JSON-breaking chars like }, ], "
 safe_text = st.text(

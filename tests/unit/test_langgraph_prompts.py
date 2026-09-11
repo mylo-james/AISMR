@@ -49,7 +49,7 @@ def test_build_editor_prompt_motivational_includes_text_overlays() -> None:
     assert "duration_seconds: 16.0" in prompt
 
 
-def test_build_editor_prompt_default_mentions_analyze_media_and_duration() -> None:
+def test_build_editor_prompt_default_uses_owned_renderer_and_supplied_duration() -> None:
     from myloware.workflows.langgraph.prompts import build_editor_prompt
 
     prompt = build_editor_prompt(
@@ -60,8 +60,11 @@ def test_build_editor_prompt_default_mentions_analyze_media_and_duration() -> No
         duration_seconds=12.5,
     )
 
-    assert "analyze_media" in prompt
-    assert "duration_seconds: 12.5" in prompt
+    assert "analyze_media" not in prompt
+    assert "remotion_render" in prompt
+    assert "role_knowledge_search" in prompt
+    assert "duration_seconds=12.5" in prompt
+    assert "https://example.com/a.mp4" in prompt
 
 
 def test_build_publisher_prompt_uses_project_template(monkeypatch) -> None:

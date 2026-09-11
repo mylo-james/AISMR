@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any, List
 
+from llama_stack_client import LlamaStackClient
+from llama_stack_client.lib.agents.agent import Agent
+
 from myloware.agents.factory import create_persona_agent
+from myloware.agents.roles import append_role_contract, validate_role_tool_configuration
 from myloware.agents.tools.supervisor import (
     ApproveGateTool,
     GetRunStatusTool,
@@ -12,9 +16,8 @@ from myloware.agents.tools.supervisor import (
     StartWorkflowTool,
 )
 from myloware.config.loaders import load_agent_config
-from llama_stack_client import LlamaStackClient
-from llama_stack_client.lib.agents.agent import Agent
 from myloware.observability.logging import get_logger
+from myloware.tools.role_knowledge import RoleKnowledgeSearchTool
 
 logger = get_logger(__name__)
 
@@ -48,24 +51,18 @@ def create_supervisor_agent(
 
     if not instructions:
         raise ValueError("No instructions found in supervisor config")
+    validate_role_tool_configuration("supervisor", config.get("tools", []))
+    instructions = append_role_contract("supervisor", instructions)
 
     # Build tools list - custom tools + builtin tools
     tools: List[Any] = [
-        # Custom MyloWare tools for workflow management
+        # Custom AISMR tools for workflow management
         StartWorkflowTool(vector_db_id=vector_db_id),
         GetRunStatusTool(),
         ListRunsTool(),
         ApproveGateTool(vector_db_id=vector_db_id),
+        RoleKnowledgeSearchTool(project=project, role="supervisor"),
     ]
-
-    # Add RAG tool (file_search) if vector_db_id is provided
-    if vector_db_id:
-        tools.append(
-            {
-                "type": "file_search",
-                "vector_store_ids": [vector_db_id],
-            }
-        )
 
     # Use model from config if not overridden
     model_id = model or config.get("model")

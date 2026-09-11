@@ -14,4 +14,3 @@ class JobReschedule(RuntimeError):
         super().__init__(reason)
         self.retry_delay_seconds = float(retry_delay_seconds)
         self.reason = reason
-

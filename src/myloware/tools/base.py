@@ -79,7 +79,7 @@ def format_tool_success(
 
 class MylowareBaseTool(ClientTool):
     """
-    Base class for MyloWare custom tools using Llama Stack ClientTool.
+    Base class for AISMR custom tools using Llama Stack ClientTool.
 
     Subclasses must implement:
     - get_name() -> str

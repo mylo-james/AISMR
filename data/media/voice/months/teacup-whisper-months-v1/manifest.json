@@ -1,0 +1,453 @@
+{
+  "schema_version": 1,
+  "bank_id": "teacup-whisper-months-v1",
+  "review_status": "approved",
+  "source": {
+    "archive": "approved-teacup-v3",
+    "audio_sha256": "c580b32201095f3e52b715b6eaa01d81276c50f24a12ae842424744df779762e",
+    "timestamps_sha256": "c53242a860a954a3fd8a370ab80ebf045aa88031f9184cec3e4b81a387137f21",
+    "request_sha256": "76cc05962431b3111f4f25929eb2634c9d3eefeff879016a7eaeed7c6945bb81",
+    "request_hash_serialization": "json.dumps(request, sort_keys=True)",
+    "decoded_pcm_wav_sha256": "b100d6b7339e511695df7238273b9d2914b886b76dffe7afbb98a150682399c9"
+  },
+  "voice_profile": {
+    "profile_version": "eleven-v3-whisper-en-v1",
+    "model": "fal-ai/elevenlabs/tts/eleven-v3",
+    "voice": "KmnvDXRA0HU55Q0aqkPG",
+    "stability": 0.5,
+    "language_code": "en",
+    "apply_text_normalization": "off",
+    "timestamps": true,
+    "delivery_prefix": "[whispers]",
+    "between_cues": "[long pause]"
+  },
+  "voice_profile_sha256": "99bb477d104635a8dae416d7e90a2ae35402a0ac19fa939b48f49674918e6d3a",
+  "audio_format": {
+    "container": "wav",
+    "codec": "pcm_s16le",
+    "sample_rate_hz": 44100,
+    "channels": 1,
+    "bits_per_sample": 16
+  },
+  "cut_policy": {
+    "version": "measured-quiet-month-extraction-v1",
+    "silence_threshold_dbfs": -55,
+    "silence_minimum_seconds": 0.08,
+    "edge_guard_seconds": 0.03,
+    "start": "30 ms after preceding measured silence begins; January retains source beginning",
+    "end": "Earlier of measured following silence end or next title timestamp, minus 30 ms",
+    "january_added_leading_silence_seconds": 0.25,
+    "processing": "PCM slice only; no gain, denoise, resynthesis, fades, or time stretching"
+  },
+  "clips": [
+    {
+      "index": 0,
+      "ordinal": 1,
+      "label": "January",
+      "filename": "january.wav",
+      "sha256": "16bceb60706b74b0f734991da75ebb228d97ce03e212dd89a2e86e741cd532b8",
+      "byte_size": 226330,
+      "duration_seconds": 2.5656009070294785,
+      "source_start_sample": 0,
+      "source_end_sample_exclusive": 102118,
+      "source_start_seconds": 0.0,
+      "source_end_seconds": 2.3156009070294785,
+      "added_leading_silence_samples": 11025,
+      "leading_measured_gap": null,
+      "trailing_measured_gap": {
+        "start_seconds": 0.876893,
+        "end_seconds": 2.345601
+      },
+      "source_word_timestamp": {
+        "text": "january",
+        "start_seconds": 0.594,
+        "end_seconds": 0.72
+      },
+      "next_excluded_title_timestamp": {
+        "text": "frozen",
+        "start_seconds": 2.3890000000000002,
+        "end_seconds": 2.8000000000000003
+      },
+      "preserved_leading_gap_seconds": 0,
+      "preserved_trailing_gap_seconds": 1.4387079070294786
+    },
+    {
+      "index": 1,
+      "ordinal": 2,
+      "label": "February",
+      "filename": "february.wav",
+      "sha256": "f2a1334f0ab1de96913d52ad7bea009b781ec48189023d9028f68a70d86298cd",
+      "byte_size": 333646,
+      "duration_seconds": 3.7823356009070297,
+      "source_start_sample": 162185,
+      "source_end_sample_exclusive": 328986,
+      "source_start_seconds": 3.6776643990929707,
+      "source_end_seconds": 7.46,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 3.647664,
+        "end_seconds": 5.34288
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 6.215102,
+        "end_seconds": 7.549637
+      },
+      "source_word_timestamp": {
+        "text": "february",
+        "start_seconds": 5.689,
+        "end_seconds": 6.08
+      },
+      "next_excluded_title_timestamp": {
+        "text": "diamond",
+        "start_seconds": 7.49,
+        "end_seconds": 7.84
+      },
+      "preserved_leading_gap_seconds": 1.6652156009070294,
+      "preserved_trailing_gap_seconds": 1.244898
+    },
+    {
+      "index": 2,
+      "ordinal": 3,
+      "label": "March",
+      "filename": "march.wav",
+      "sha256": "90792b66aeb6c979f682103c5453e66394b4d6d31cfddece2622f05176bdb167",
+      "byte_size": 301174,
+      "duration_seconds": 3.414172335600907,
+      "source_start_sample": 382772,
+      "source_end_sample_exclusive": 533337,
+      "source_start_seconds": 8.679637188208616,
+      "source_end_seconds": 12.093809523809524,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 8.649615,
+        "end_seconds": 10.505805
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 11.060091,
+        "end_seconds": 12.123832
+      },
+      "source_word_timestamp": {
+        "text": "march",
+        "start_seconds": 10.813,
+        "end_seconds": 10.88
+      },
+      "next_excluded_title_timestamp": {
+        "text": "moss",
+        "start_seconds": 12.16,
+        "end_seconds": 12.48
+      },
+      "preserved_leading_gap_seconds": 1.8261678117913842,
+      "preserved_trailing_gap_seconds": 1.0337185238095241
+    },
+    {
+      "index": 3,
+      "ordinal": 4,
+      "label": "April",
+      "filename": "april.wav",
+      "sha256": "7bb946db93d56b44f64c6368f5813e38772d290229dc02826b89a2030a36ff6d",
+      "byte_size": 273010,
+      "duration_seconds": 3.0948526077097505,
+      "source_start_sample": 588080,
+      "source_end_sample_exclusive": 724563,
+      "source_start_seconds": 13.33514739229025,
+      "source_end_seconds": 16.43,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 13.305147,
+        "end_seconds": 15.060476
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 15.623084,
+        "end_seconds": 16.515601
+      },
+      "source_word_timestamp": {
+        "text": "april",
+        "start_seconds": 15.36,
+        "end_seconds": 15.44
+      },
+      "next_excluded_title_timestamp": {
+        "text": "mercury",
+        "start_seconds": 16.46,
+        "end_seconds": 16.88
+      },
+      "preserved_leading_gap_seconds": 1.7253286077097503,
+      "preserved_trailing_gap_seconds": 0.8069159999999993
+    },
+    {
+      "index": 4,
+      "ordinal": 5,
+      "label": "May",
+      "filename": "may.wav",
+      "sha256": "447a7bf8c4e2a23e46dd50831188159a3a62d5b7d3ea3a8f09a43e2d9eef3787",
+      "byte_size": 282108,
+      "duration_seconds": 3.1980045351473922,
+      "source_start_sample": 781407,
+      "source_end_sample_exclusive": 922439,
+      "source_start_seconds": 17.718979591836735,
+      "source_end_seconds": 20.916984126984126,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 17.688957,
+        "end_seconds": 19.384853
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 19.890045,
+        "end_seconds": 20.975624
+      },
+      "source_word_timestamp": {
+        "text": "may",
+        "start_seconds": 19.7,
+        "end_seconds": 19.759999999999998
+      },
+      "next_excluded_title_timestamp": {
+        "text": "cloud",
+        "start_seconds": 20.947,
+        "end_seconds": 21.28
+      },
+      "preserved_leading_gap_seconds": 1.6658734081632645,
+      "preserved_trailing_gap_seconds": 1.026939126984125
+    },
+    {
+      "index": 5,
+      "ordinal": 6,
+      "label": "June",
+      "filename": "june.wav",
+      "sha256": "394247660c5ee396b2a7ee8a7d9df7a1b2869fcda25560963334e907520bfd1b",
+      "byte_size": 229082,
+      "duration_seconds": 2.5968027210884355,
+      "source_start_sample": 973119,
+      "source_end_sample_exclusive": 1087638,
+      "source_start_seconds": 22.066190476190478,
+      "source_end_seconds": 24.66299319727891,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 22.03619,
+        "end_seconds": 23.374331
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 23.902041,
+        "end_seconds": 24.721769
+      },
+      "source_word_timestamp": {
+        "text": "june",
+        "start_seconds": 23.683,
+        "end_seconds": 23.759999999999998
+      },
+      "next_excluded_title_timestamp": {
+        "text": "coral",
+        "start_seconds": 24.692999999999998,
+        "end_seconds": 24.959999999999997
+      },
+      "preserved_leading_gap_seconds": 1.3081405238095236,
+      "preserved_trailing_gap_seconds": 0.7609521972789111
+    },
+    {
+      "index": 6,
+      "ordinal": 7,
+      "label": "July",
+      "filename": "july.wav",
+      "sha256": "1de57d65cffebb079cb14d280d32acab318cf5b63ffcaf683ab94e869f61d83f",
+      "byte_size": 267090,
+      "duration_seconds": 3.0277324263038548,
+      "source_start_sample": 1138674,
+      "source_end_sample_exclusive": 1272197,
+      "source_start_seconds": 25.820272108843536,
+      "source_end_seconds": 28.848004535147393,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 25.790272,
+        "end_seconds": 27.437574
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 28.015079,
+        "end_seconds": 28.878005
+      },
+      "source_word_timestamp": {
+        "text": "july",
+        "start_seconds": 27.762999999999998,
+        "end_seconds": 27.839999999999996
+      },
+      "next_excluded_title_timestamp": {
+        "text": "wax",
+        "start_seconds": 28.9,
+        "end_seconds": 29.2
+      },
+      "preserved_leading_gap_seconds": 1.6173018911564654,
+      "preserved_trailing_gap_seconds": 0.8329255351473925
+    },
+    {
+      "index": 7,
+      "ordinal": 8,
+      "label": "August",
+      "filename": "august.wav",
+      "sha256": "b71d8e40813f77cee622a4d172844b0bc0b6276973340f1a30a68f08efe1b2f1",
+      "byte_size": 262016,
+      "duration_seconds": 2.970204081632653,
+      "source_start_sample": 1322234,
+      "source_end_sample_exclusive": 1453220,
+      "source_start_seconds": 29.98263038548753,
+      "source_end_seconds": 32.952834467120184,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 29.95263,
+        "end_seconds": 31.744308
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 32.376122,
+        "end_seconds": 32.982857
+      },
+      "source_word_timestamp": {
+        "text": "august",
+        "start_seconds": 32.078,
+        "end_seconds": 32.16
+      },
+      "next_excluded_title_timestamp": {
+        "text": "feather",
+        "start_seconds": 33.01,
+        "end_seconds": 33.36
+      },
+      "preserved_leading_gap_seconds": 1.7616776145124717,
+      "preserved_trailing_gap_seconds": 0.5767124671201813
+    },
+    {
+      "index": 8,
+      "ordinal": 9,
+      "label": "September",
+      "filename": "september.wav",
+      "sha256": "9ed7d1a2fd26bc9315de3c977231003d4ff2d6f0b4d12d644ceb2fbeb2a91956",
+      "byte_size": 268518,
+      "duration_seconds": 3.043922902494331,
+      "source_start_sample": 1506260,
+      "source_end_sample_exclusive": 1640497,
+      "source_start_seconds": 34.15555555555556,
+      "source_end_seconds": 37.19947845804989,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 34.125533,
+        "end_seconds": 35.644739
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 36.383424,
+        "end_seconds": 37.229501
+      },
+      "source_word_timestamp": {
+        "text": "september",
+        "start_seconds": 36.059,
+        "end_seconds": 36.16
+      },
+      "next_excluded_title_timestamp": {
+        "text": "amber",
+        "start_seconds": 37.253,
+        "end_seconds": 37.519999999999996
+      },
+      "preserved_leading_gap_seconds": 1.4891834444444427,
+      "preserved_trailing_gap_seconds": 0.8160544580498907
+    },
+    {
+      "index": 9,
+      "ordinal": 10,
+      "label": "October",
+      "filename": "october.wav",
+      "sha256": "dc64f0ae678a88c1cf9891ec2fa1a14b0cc36fcb8e8c4b8dfd6144bb560750ef",
+      "byte_size": 271446,
+      "duration_seconds": 3.0771201814058955,
+      "source_start_sample": 1691150,
+      "source_end_sample_exclusive": 1826851,
+      "source_start_seconds": 38.348072562358276,
+      "source_end_seconds": 41.42519274376417,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 38.31805,
+        "end_seconds": 39.827143
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 40.598639,
+        "end_seconds": 41.455193
+      },
+      "source_word_timestamp": {
+        "text": "october",
+        "start_seconds": 40.153,
+        "end_seconds": 40.48
+      },
+      "next_excluded_title_timestamp": {
+        "text": "velvet",
+        "start_seconds": 41.497,
+        "end_seconds": 41.839999999999996
+      },
+      "preserved_leading_gap_seconds": 1.4790704376417239,
+      "preserved_trailing_gap_seconds": 0.8265537437641726
+    },
+    {
+      "index": 10,
+      "ordinal": 11,
+      "label": "November",
+      "filename": "november.wav",
+      "sha256": "3e5021ef21b0f19518087a8ad3494266dd27453925f5b7efef570768017fbc9a",
+      "byte_size": 256828,
+      "duration_seconds": 2.9113832199546485,
+      "source_start_sample": 1883492,
+      "source_end_sample_exclusive": 2011884,
+      "source_start_seconds": 42.70956916099773,
+      "source_end_seconds": 45.62095238095238,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 42.679569,
+        "end_seconds": 44.224671
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 44.88449,
+        "end_seconds": 45.650975
+      },
+      "source_word_timestamp": {
+        "text": "november",
+        "start_seconds": 44.62,
+        "end_seconds": 44.72
+      },
+      "next_excluded_title_timestamp": {
+        "text": "salt",
+        "start_seconds": 45.68,
+        "end_seconds": 46.0
+      },
+      "preserved_leading_gap_seconds": 1.51510183900227,
+      "preserved_trailing_gap_seconds": 0.736462380952382
+    },
+    {
+      "index": 11,
+      "ordinal": 12,
+      "label": "December",
+      "filename": "december.wav",
+      "sha256": "9a34fb05e88fb80eb3049e2289831e5e994b5318deff07315cbcf10b3e28e8a9",
+      "byte_size": 235852,
+      "duration_seconds": 2.673560090702948,
+      "source_start_sample": 2067360,
+      "source_end_sample_exclusive": 2185264,
+      "source_start_seconds": 46.87891156462585,
+      "source_end_seconds": 49.5524716553288,
+      "added_leading_silence_samples": 0,
+      "leading_measured_gap": {
+        "start_seconds": 46.848889,
+        "end_seconds": 48.22161
+      },
+      "trailing_measured_gap": {
+        "start_seconds": 48.891973,
+        "end_seconds": 49.582472
+      },
+      "source_word_timestamp": {
+        "text": "december",
+        "start_seconds": 48.407000000000004,
+        "end_seconds": 48.72
+      },
+      "next_excluded_title_timestamp": {
+        "text": "star",
+        "start_seconds": 49.6,
+        "end_seconds": 49.92
+      },
+      "preserved_leading_gap_seconds": 1.342698435374146,
+      "preserved_trailing_gap_seconds": 0.6604986553288015
+    }
+  ],
+  "listening_approval": {
+    "date": "2026-09-10",
+    "owner_response": "perfect"
+  }
+}

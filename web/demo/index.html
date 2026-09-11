@@ -1,377 +1,86 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MyloWare Demo</title>
-    <meta
-      name="description"
-      content="Public demo: generate a short-form video with MyloWare."
-    />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body
-    data-api-base="https://api.myloware.mjames.dev"
-    data-api-fallback="https://myloware-api.fly.dev"
-  >
-    <header class="topbar">
-      <div class="topbar-inner">
-        <div class="topbar-left" aria-hidden="true"></div>
-        <div class="brand">
-          <span class="brand-mark" aria-label="MyloWare">MyloWare</span>
-        </div>
-        <div class="topbar-actions">
-          <button class="btn ghost is-hidden" id="top-new-run-btn" type="button">
-            Generate video
-          </button>
-          <a
-            class="topbar-link"
-            href="https://api.myloware.mjames.dev/docs"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Docs
-          </a>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Follow a LangGraph workflow from one everyday object to a finished ASMR video. Explore its steps, decisions and saved state.">
+<meta name="theme-color" content="#eaf0eb"><title>AISMR Studio</title>
+<link rel="stylesheet" href="styles.css?v=status-001">
+</head>
+<body>
+<a class="skip-link" href="#workspace">Skip to workflow</a>
+<header class="masthead">
+  <a class="wordmark" href="#workspace" aria-label="AISMR Studio"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><path d="M10 12h20M10 28h20M10 12v16M30 12v16"/><circle cx="10" cy="12" r="4"/><circle cx="30" cy="12" r="4"/><circle cx="10" cy="28" r="4"/><circle cx="30" cy="28" r="4"/></svg>AISMR</a>
+  <nav aria-label="Studio navigation"><a href="#workspace" class="nav-tab is-current" data-nav="workspace">Create</a><a href="#recent" class="nav-tab" data-nav="recent">Library</a><a href="#introduction" class="nav-tab" data-nav="introduction">About</a></nav>
+  <span class="connection" id="connection-status" role="status">Connecting…</span>
+</header>
+<main>
+  <section class="introduction" id="introduction" aria-labelledby="intro-title" hidden>
+    <div><h1 id="intro-title">A workflow you can follow.</h1><p>AISMR turns one everyday object into twelve sensory scenes and one finished video. LangGraph coordinates the plan, your reviews, video generation, narration and editing.</p><p class="intro-detail">The working screen shows recorded activity and saved outputs. Select a step to inspect its history; return to the current step to follow new work. Browsing history does not interrupt the run.</p><a class="button button--primary" href="#workspace" id="enter-workflow">Open the studio <span aria-hidden="true">→</span></a></div>
+    <section class="about-workflow" aria-labelledby="about-workflow-title"><h2 id="about-workflow-title">The seven steps</h2><ol id="about-stages"></ol></section>
+    <section class="about-evidence" aria-labelledby="about-evidence-title"><h2 id="about-evidence-title">What the activity shows</h2><p>Entries come from saved application events. Times describe when those events were recorded. Agent activity distinguishes a submitted request, a received result and a validated result. Renderer updates show observed preparation, frame rendering, encoding and verification. Percentages describe renderer work, not the whole workflow. Older runs may have fewer updates. These records do not expose model thinking.</p><p>Sample mode uses fixture plans and media. Recorded mode replays earlier media. Both are labeled in the studio. Newly generated video requires the live providers to be enabled.</p><p>In a production run, plan approval starts production. Accepting an eligible final video also permits it to appear in the public library, which keeps up to three results. Opening or watching a video does not give that permission.</p><p>Run allowances are application accounting, not provider billing caps. Unresolved charges are not treated as free. Application episodic memory is not available in this walkthrough; coding-agent memory is separate.</p></section>
+  </section>
+  <section class="workspace" id="workspace" aria-label="Workflow workspace">
+    <nav class="graph-panel" id="workflow-details" aria-label="Workflow timeline">
+      <div class="graph-heading"><h2>Steps</h2></div>
+      <ol class="workflow-graph" id="workflow-graph" aria-label="Seven LangGraph stages"></ol>
+      <p class="graph-footnote" id="graph-footnote"></p>
+    </nav>
+    <section class="inspector" id="inspector" aria-labelledby="selected-title">
+      <div class="run-heading"><div><h2 id="run-title" tabindex="-1">Choose an object</h2><p id="run-subtitle" hidden></p></div><button class="button button--small" id="new-run" type="button">New run</button></div>
+      <section class="run-status" id="run-status" aria-label="Current workflow status" hidden>
+        <div class="run-status-line" role="status" aria-atomic="true"><span class="run-status-mark" aria-hidden="true"></span><strong id="run-status-label"></strong><span id="run-activity"></span></div>
+        <p id="run-work-detail" hidden></p>
+        <div class="render-meter" id="render-meter" hidden><progress id="render-progress" max="100" aria-label="Renderer progress"></progress><span id="render-percent" aria-hidden="true"></span></div>
+        <time id="run-updated" hidden></time>
+      </section>
+      <div class="run-follow"><div class="return-current" id="return-current" hidden><button class="button button--small" id="current-step-button" type="button">Return to current step</button></div></div>
+      <div class="node-inspector" id="node-inspector">
+        <div class="node-heading"><span class="step-number" id="selected-number" aria-hidden="true">1</span><h1 id="selected-title" tabindex="-1">Plan ideas</h1><span class="status-label" id="selected-status">Start here</span></div>
+        <div class="node-content">
+          <p class="mode-note" id="mode-note" hidden></p><p class="stage-copy" id="stage-copy"></p>
+          <p class="notice" id="readonly-notice" hidden>Read-only view. Decisions belong to the visitor who started this run.</p><p class="notice notice--error" id="run-notice" role="status" hidden></p>
+          <section id="make-section" aria-label="Choose an object">
+            <form id="run-form" novalidate>
+              <label for="item-input">Your object</label>
+              <div class="input-row"><input id="item-input" name="item" type="text" maxlength="48" autocomplete="off" placeholder="e.g. Lantern" aria-describedby="input-help form-message" required><button class="button" id="random-button" type="button">Random</button></div>
+              <p class="field-help" id="input-help">Up to 48 characters.</p><p class="form-message" id="form-message" role="alert"></p>
+              <button class="button button--primary" id="start-button" type="submit" disabled>Prepare 12 ideas <span aria-hidden="true">→</span></button><p class="allowance" id="allowance">Checking generation availability…</p>
+              <div class="suggestion-list" id="suggestion-list" aria-label="Suggested objects"></div>
+            </form>
+            <div class="recorded-option" id="recorded-option" hidden><h4>Explore the recorded workflow</h4><p id="recorded-copy"></p><button class="button" id="start-recorded" type="button">Open recorded walkthrough</button></div>
+          </section>
+          <details class="agent-work" id="agent-work" hidden><summary>Agent activity</summary><ol class="plan-substeps" id="plan-substeps" aria-label="Recorded plan substeps"></ol></details>
+          <section id="idea-section" aria-labelledby="ideas-title" hidden>
+            <div class="section-heading"><h4 id="ideas-title">Your scenes</h4><button class="text-button" id="toggle-ideas" type="button" aria-expanded="false" aria-controls="idea-grid">View all 12 ideas</button></div>
+            <div class="idea-browser" id="idea-browser"><button class="button button--small" id="previous-idea" type="button" aria-label="Previous idea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button><span id="idea-position" aria-live="polite">1 of 12</span><button class="button button--small" id="next-idea" type="button" aria-label="Next idea"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button></div>
+            <ol class="idea-grid" id="idea-grid"></ol>
+            <div class="decision-bar" id="idea-actions" hidden><button class="button button--approve" data-decision="approve" data-gate="ideas" type="button">Approve plan</button><button class="button" id="open-revision" type="button">Request revision</button></div>
+            <section class="revision-controls" id="revision-controls" aria-labelledby="revision-title" hidden>
+              <div class="revision-heading"><h5 id="revision-title">Revise the plan</h5><button class="text-button" id="select-all-scenes" type="button">All scenes</button></div>
+              <p class="field-help">Choose the scenes to replace. All twelve are selected by default.</p>
+              <div class="revision-scenes" id="revision-scenes" role="group" aria-label="Scenes to replace"></div>
+              <label for="revision-reason">What should change? <span>(optional)</span></label>
+              <select id="revision-reason"><option value="">No reason selected</option><option value="repetitive">Too repetitive</option><option value="not_object_specific">Not specific to the object</option><option value="unclear_action">Action is unclear</option><option value="other">Other</option></select>
+              <label for="revision-note">Optional note</label>
+              <textarea id="revision-note" maxlength="500" aria-describedby="revision-note-count"></textarea><p class="field-help" id="revision-note-count">0 of 500 characters</p>
+              <div class="revision-actions"><button class="button" id="submit-revision" data-decision="revise" data-gate="ideas" type="button">Request revision</button><button class="text-button" id="cancel-revision" type="button">Cancel</button></div>
+            </section>
+            <button class="text-button text-button--danger" id="cancel-plan" data-decision="cancel" data-gate="ideas" type="button" hidden>Cancel this run</button>
+          </section>
+          <section id="production-section" aria-labelledby="production-title" hidden><h4 id="production-title">Assets</h4><p id="asset-count"></p><details class="asset-details"><summary>View tasks</summary><ol class="asset-grid" id="asset-grid"></ol></details></section>
+          <section id="final-section" aria-labelledby="final-title" hidden><h4 id="final-title" class="sr-only">Video preview</h4><video id="preview-video" controls playsinline preload="none" hidden>Your browser cannot play this video.</video><p id="final-copy"></p><div id="final-actions" hidden><p class="consent-copy">Accepting this result also makes it publicly visible in Recent creations. The library keeps up to three results; a newer accepted result can replace the oldest.</p><button class="button button--approve" data-decision="approve" data-gate="final" type="button">Accept and show in Recent creations</button><button class="text-button" id="keep-reviewing" type="button">Keep reviewing privately</button><button class="text-button text-button--danger" data-decision="cancel" data-gate="final" type="button">Discard result</button></div></section>
+          <section class="activity-section" id="activity-section" aria-labelledby="activity-heading" hidden><h4 id="activity-heading">Activity</h4><p id="activity-empty"></p><ol class="activity-list" id="activity-list"></ol><p class="sr-only" id="activity-announcement" role="status"></p></section>
+          <section id="waiting-section" hidden><h4 id="waiting-title">Waiting for an update</h4><p id="waiting-copy"></p><button class="button" id="refresh-run" type="button">Refresh run</button></section>
+          <details class="node-details" id="node-details"><summary>Saved details</summary><div id="technical-details"></div><div class="run-tools" id="run-tools" hidden><button class="text-button" id="share-run" type="button">Copy read-only link</button><a class="text-button" id="read-only-view" target="_blank" rel="noopener" hidden>Open read-only view</a><span id="run-id"></span></div></details>
         </div>
       </div>
-    </header>
+    </section>
 
-    <main class="layout" aria-live="polite">
-      <aside class="rail rail-left" id="rail-left">
-        <section class="card note">
-          <h2>About</h2>
-          <p class="muted">
-            Generate a short-form video from a topic. Approve the draft and the final render right
-            here.
-          </p>
-          <p class="muted">
-            Runs are saved in this browser. Use “Share” on a run to resume elsewhere.
-          </p>
-        </section>
+  </section>
+  <section class="recent" hidden id="recent" aria-labelledby="recent-title"><div class="section-heading"><div><h2 id="recent-title">Recent creations</h2><p>Up to three accepted results, with the workflow that made them.</p></div><span id="gallery-count"></span></div><p id="gallery-message" role="status">Loading recent creations…</p><ol class="gallery-grid" id="gallery-list"></ol></section>
+</main>
 
-        <details class="card collapsible-card" id="runs-details" open>
-          <summary>
-            <div class="card-head compact collapsible-head">
-              <h2>Runs</h2>
-              <div class="collapsible-actions">
-                <button class="btn tertiary" id="refresh-runs" type="button">Refresh</button>
-                <span class="chevron" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M7 10l5 5 5-5"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </summary>
-          <div class="collapsible-body">
-            <div class="runs-list" id="runs-list"></div>
-          </div>
-        </details>
-      </aside>
-
-      <section class="feed">
-        <article class="card post-card" id="demo-card">
-          <header class="post-head">
-            <div class="post-user">
-              <div class="avatar" aria-hidden="true">MW</div>
-              <div class="post-meta">
-                <div class="post-title">
-                  <span class="handle">myloware</span>
-                  <span class="sep">•</span>
-                  <span class="muted">public demo</span>
-                </div>
-                <p class="sub">Generate a short-form video from a topic.</p>
-              </div>
-            </div>
-            <div class="post-actions">
-              <button class="btn ghost is-hidden" id="new-run-btn" type="button">
-                Generate a new video
-              </button>
-              <span id="status-pill" class="status-pill">Idle</span>
-            </div>
-          </header>
-
-          <p class="topic-line is-hidden" id="topic-line"></p>
-
-          <section class="stepper-wrap" aria-label="Workflow timeline">
-            <ol class="stepper" id="timeline-tabs">
-              <li class="step active" data-step="begin" title="Begin">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 6v12m-6-6h12"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Begin</span>
-              </li>
-              <li class="step" data-step="ideation" title="Ideation">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 3a7 7 0 0 0-4 12c.7.6 1 1.2 1 2v1h6v-1c0-.8.3-1.4 1-2A7 7 0 0 0 12 3Z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M9.5 21h5"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Ideate</span>
-              </li>
-              <li class="step approval" data-step="idea-approval" title="Idea approval">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M9 12l2 2 4-4"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M12 22c5.5 0 10-4.5 10-10S17.5 2 12 2 2 6.5 2 12s4.5 10 10 10Z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Approve</span>
-              </li>
-              <li class="step" data-step="production" title="Production">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M3 7h18M3 12h18M3 17h18"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Produce</span>
-              </li>
-              <li class="step" data-step="render" title="Render">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M4 6h16v12H4z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M10 9l5 3-5 3V9Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Render</span>
-              </li>
-              <li class="step approval" data-step="publish-approval" title="Publish approval">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 17v-8"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                    <path
-                      d="M8.5 12.5 12 9l3.5 3.5"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                    <path
-                      d="M4 20h16"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Approve</span>
-              </li>
-              <li class="step" data-step="publish" title="Publish">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3 3-7Z"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Publish</span>
-              </li>
-              <li class="step" data-step="done" title="Done">
-                <span class="dot" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M20 6 9 17l-5-5"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
-                <span class="label">Done</span>
-              </li>
-            </ol>
-            <div class="status-inline">
-              <span id="status-time" class="status-time"></span>
-            </div>
-          </section>
-
-          <div id="toast" class="toast is-hidden" role="status" aria-live="polite"></div>
-
-          <section class="timeline-panels">
-            <div class="timeline-panel active" data-panel="begin">
-              <form id="demo-form" class="form">
-                <label for="brief">What do you want the video to be about?</label>
-                <textarea
-                  id="brief"
-                  name="brief"
-                  placeholder="Example: resilience after setbacks, building discipline, handling rejection."
-                  required
-                  maxlength="4000"
-                ></textarea>
-                <div class="actions">
-                  <button type="submit" id="start-btn" class="btn primary">Generate video</button>
-                </div>
-                <p class="hint">
-                  Typical run time: 2–4 minutes · Rate limited + safety shields
-                </p>
-              </form>
-            </div>
-
-            <div class="timeline-panel" data-panel="ideation">
-              <h2>Ideation</h2>
-              <p class="muted">Drafting the narrative and on-screen overlays.</p>
-              <div class="loader">
-                <div class="spinner" aria-hidden="true"></div>
-                <p class="muted" id="ideation-live">Working…</p>
-              </div>
-              <div class="mini-activity-wrap" aria-label="Latest activity">
-                <div class="mini-activity-head">Latest</div>
-                <ul class="mini-activity" id="mini-activity"></ul>
-              </div>
-            </div>
-
-            <div class="timeline-panel" data-panel="idea-approval">
-              <h2>Idea approval</h2>
-              <p class="muted">Review the draft below, then approve to continue.</p>
-              <div class="artifact">
-                <div class="artifact-head">
-                  <span>Draft</span>
-                  <button class="btn tertiary" id="copy-ideas-btn" type="button">Copy</button>
-                </div>
-                <div class="artifact-body" id="ideas-body"></div>
-              </div>
-              <input
-                id="idea-approval-comment"
-                name="idea-approval-comment"
-                placeholder="Optional comment"
-                maxlength="240"
-              />
-              <div class="hitl-actions">
-                <button class="btn secondary" id="reject-idea-btn" type="button">Reject</button>
-                <button class="btn primary" id="approve-idea-btn" type="button">Approve</button>
-              </div>
-            </div>
-
-            <div class="timeline-panel" data-panel="production">
-              <h2>Production</h2>
-              <p class="muted">Generating clips (OpenAI Sora). This can take a few minutes.</p>
-              <div class="metric">
-                <span class="metric-label">Clips ready</span>
-                <span class="metric-value" id="clip-count">—</span>
-              </div>
-              <div class="progress-bar" aria-label="Video generation progress">
-                <div class="progress-fill" id="video-progress-fill"></div>
-              </div>
-              <p class="muted" id="video-progress-label">Waiting for clips…</p>
-            </div>
-
-            <div class="timeline-panel" data-panel="render">
-              <h2>Render</h2>
-              <p class="muted">Rendering the final video.</p>
-              <div class="metric">
-                <span class="metric-label">Render status</span>
-                <span class="metric-value" id="render-status">—</span>
-              </div>
-              <div class="progress-bar" aria-label="Render progress">
-                <div class="progress-fill" id="render-progress-fill"></div>
-              </div>
-              <p class="muted" id="render-progress-label">Waiting for render updates…</p>
-              <div class="preview" id="render-preview"></div>
-            </div>
-
-            <div class="timeline-panel" data-panel="publish-approval">
-              <h2>Publish approval</h2>
-              <p class="muted">Review the render below, then approve to publish to TikTok.</p>
-              <div class="preview" id="publish-preview"></div>
-              <input
-                id="publish-approval-comment"
-                name="publish-approval-comment"
-                placeholder="Optional comment"
-                maxlength="240"
-              />
-              <div class="hitl-actions">
-                <button class="btn secondary" id="reject-publish-btn" type="button">Reject</button>
-                <button class="btn primary" id="approve-publish-btn" type="button">Approve</button>
-              </div>
-            </div>
-
-            <div class="timeline-panel" data-panel="publish">
-              <h2>Publishing</h2>
-              <p class="muted">Sending the final video to TikTok.</p>
-              <div class="loader">
-                <div class="spinner" aria-hidden="true"></div>
-                <p class="muted">Publishing…</p>
-              </div>
-            </div>
-
-            <div class="timeline-panel" data-panel="done">
-              <div class="panel-head">
-                <h2>Done</h2>
-              </div>
-              <div class="result-body" id="result-body"></div>
-            </div>
-          </section>
-        </article>
-      </section>
-
-      <aside class="rail rail-right" id="rail-right">
-        <section class="card" id="activity-card">
-          <header class="card-head compact">
-            <h2>Activity</h2>
-            <button class="btn tertiary" id="refresh-now" type="button">Refresh</button>
-          </header>
-          <ul class="activity" id="activity-list"></ul>
-        </section>
-      </aside>
-    </main>
-
-    <script src="app.js"></script>
-  </body>
+<script src="progress.js?v=status-001" defer></script>
+<script src="app.js?v=status-001" defer></script>
+</body>
 </html>

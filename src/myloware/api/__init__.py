@@ -1,1 +1,1 @@
-"""MyloWare API module - FastAPI server."""
+"""AISMR API module - FastAPI server."""

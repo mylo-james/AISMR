@@ -1,6 +1,9 @@
-# MyloWare Documentation
+# AISMR Documentation
 
-Multi-agent video production platform built on Llama Stack, with LangGraph for workflow orchestration.
+Reviewed surreal video creation with LangGraph. Start with the
+[local AISMR studio](reference/aismr-local.md) or
+[current deployment preparation](how-to/aismr-deployment.md).
+The lower-level Llama Stack references document retained integrations.
 
 This documentation follows the [Diátaxis](https://diataxis.fr/) framework.
 
@@ -12,7 +15,7 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework.
 
 | Tutorial | What You'll Learn |
 |----------|-------------------|
-| [Quickstart](tutorials/quickstart.md) | Get MyloWare running and create your first video workflow |
+| [Quickstart](tutorials/quickstart.md) | Get AISMR running and create your first video workflow |
 
 ---
 
@@ -24,7 +27,7 @@ This documentation follows the [Diátaxis](https://diataxis.fr/) framework.
 |-------|-------------------|
 | [Add an Agent](how-to/add-agent.md) | Create a new agent role with custom behavior |
 | [Add a Tool](how-to/add-tool.md) | Build custom Llama Stack tools for external services |
-| [Deploy](how-to/deploy.md) | Production deployment to Fly.io |
+| [Deploy](how-to/deploy.md) | Vercel frontend, Cloudflare DNS, Neon and persistent video runtime |
 | [Troubleshooting](how-to/troubleshooting.md) | Debug common issues |
 
 ---

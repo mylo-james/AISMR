@@ -1,6 +1,6 @@
 # Llama Stack Integration
 
-How MyloWare uses Llama Stack.
+How AISMR uses Llama Stack.
 
 ---
 
@@ -18,7 +18,7 @@ One SDK, one client, no framework-on-framework complexity.
 
 ## Distribution Configuration
 
-MyloWare's Llama Stack config lives in `llama_stack/run.yaml`:
+AISMR's Llama Stack config lives in `llama_stack/run.yaml`:
 
 ```yaml
 inference:

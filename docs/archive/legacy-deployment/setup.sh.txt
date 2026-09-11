@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# MyloWare Fly.io Initial Setup
+# AISMR Fly.io Initial Setup
 # =============================================================================
 # Run this once to create the Fly.io app and database.
 #
@@ -14,7 +14,7 @@ set -euo pipefail
 APP_NAME="${MYLOWARE_APP_NAME:-myloware-api}"
 REGION="${MYLOWARE_REGION:-sjc}"
 
-echo "=== MyloWare Fly.io Setup ==="
+echo "=== AISMR Fly.io Setup ==="
 echo "App: $APP_NAME"
 echo "Region: $REGION"
 echo ""

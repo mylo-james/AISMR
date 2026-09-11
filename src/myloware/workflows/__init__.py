@@ -1,4 +1,4 @@
-"""MyloWare workflows module - Multi-agent orchestration.
+"""AISMR workflows module - Multi-agent orchestration.
 
 Architecture:
 - langgraph/workflow.py: LangGraph-based workflow execution (single source of truth)

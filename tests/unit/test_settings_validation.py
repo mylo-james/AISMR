@@ -58,3 +58,32 @@ def test_force_content_shield_sets_default_when_blank(monkeypatch, tmp_path: Pat
 
     settings_obj = Settings(content_safety_shield_id="")
     assert settings_obj.content_safety_shield_id == "together/meta-llama/Llama-Guard-4-12B"
+
+
+@pytest.mark.parametrize(
+    "field", ["public_demo_allowed_workflows", "public_demo_cors_origins", "sora_fake_clip_paths"]
+)
+@pytest.mark.parametrize("source", ["env", "dotenv"])
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (" one, two , ,", ["one", "two"]),
+        ('["one", "two"]', ["one", "two"]),
+        ("", []),
+    ],
+)
+def test_list_settings_parse_real_sources(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    field: str,
+    source: str,
+    value: str,
+    expected: list[str],
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv(field.upper(), raising=False)
+    if source == "env":
+        monkeypatch.setenv(field.upper(), value)
+    else:
+        (tmp_path / ".env").write_text(f"{field.upper()}={value}\n")
+    assert getattr(Settings(), field) == expected

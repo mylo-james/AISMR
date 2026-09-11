@@ -1,4 +1,4 @@
-"""MyloWare knowledge module - Vector I/O and RAG setup."""
+"""AISMR knowledge module - Vector I/O and RAG setup."""
 
 from myloware.knowledge.setup import (
     register_knowledge_base,

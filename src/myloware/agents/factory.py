@@ -19,11 +19,18 @@ from llama_stack_client import LlamaStackClient
 from llama_stack_client.lib.agents.agent import Agent
 from llama_stack_client.lib.agents.client_tool import ClientTool
 
+from myloware.agents.roles import (
+    append_role_contract,
+    is_product_role,
+    validate_role_tool_configuration,
+)
 from myloware.config import settings
-from myloware.config.provider_modes import effective_llama_stack_provider
 from myloware.config.loaders import load_agent_config
+from myloware.config.provider_modes import effective_llama_stack_provider
 from myloware.observability.logging import get_logger
 from myloware.tools import AnalyzeMediaTool, RemotionRenderTool, SoraGenerationTool, UploadPostTool
+from myloware.tools.inspect_render import InspectRenderTool
+from myloware.tools.role_knowledge import RoleKnowledgeSearchTool
 
 logger = get_logger(__name__)
 
@@ -144,6 +151,12 @@ def create_agent(
     """
     # Load config with inheritance
     config = load_agent_config(project, role)
+    validate_role_tool_configuration(role, config.get("tools", []), custom_tools)
+
+    instructions = config.get("instructions", "")
+    if not instructions:
+        raise ValueError(f"No instructions found in config for {role}")
+    instructions = append_role_contract(role, instructions)
 
     logger.info("Creating %s agent for project %s (run_id=%s)", role, project, run_id)
 
@@ -174,7 +187,7 @@ def create_agent(
                         self.output_text = text
 
                 resp = Resp(
-                    "MyloWare is a Llama Stack native video production pipeline "
+                    "AISMR is a Llama Stack native video production pipeline "
                     "built with FastAPI and Python."
                 )
 
@@ -195,6 +208,8 @@ def create_agent(
         client=client,
         vector_db_id=vector_db_id,
         run_id=run_id,
+        project=project,
+        role=role,
     )
 
     for idx, tool in enumerate(tools):
@@ -207,7 +222,8 @@ def create_agent(
             isinstance(tool, ClientTool),
         )
 
-    # Add custom tools
+    # Custom tools are available only to non-product personas. Product roles are
+    # rejected above before a provider-specific Agent is instantiated.
     if custom_tools:
         tools.extend(custom_tools)
 
@@ -220,11 +236,6 @@ def create_agent(
         if model_override
         else (config.get("model") or settings.llama_stack_model)
     )
-
-    # Get instructions
-    instructions = config.get("instructions", "")
-    if not instructions:
-        raise ValueError(f"No instructions found in config for {role}")
 
     # Llama Stack 0.3.0 Agent ctor does not accept shields; safety handled
     # upstream (middleware + pre-flight shields).
@@ -244,6 +255,8 @@ def _build_tools_from_config(
     client: LlamaStackClient,
     vector_db_id: str | None,
     run_id: UUID | str | None = None,
+    project: str | None = None,
+    role: str | None = None,
 ) -> List[Any]:
     """Build tool list from config, injecting context where needed.
 
@@ -252,7 +265,7 @@ def _build_tools_from_config(
 
     Handles:
     - builtin:: tools (RAG with hybrid search, websearch)
-    - Custom MyloWare tools (sora_generate, remotion_render, upload_post)
+    - Custom AISMR tools (sora_generate, remotion_render, upload_post)
 
     Args:
         tool_names: List of tool names or tool configs from YAML
@@ -271,7 +284,9 @@ def _build_tools_from_config(
     for tool in tool_names:
         if isinstance(tool, str):
             # String tool name
-            tool_instance = _create_tool_instance(tool, client, vector_db_id, run_id_str)
+            tool_instance = _create_tool_instance(
+                tool, client, vector_db_id, run_id_str, project=project, role=role
+            )
             if tool_instance is not None:
                 tools.append(tool_instance)
         elif isinstance(tool, dict):
@@ -287,6 +302,8 @@ def _create_tool_instance(
     client: LlamaStackClient,
     vector_db_id: str | None,
     run_id: str | None = None,
+    project: str | None = None,
+    role: str | None = None,
 ) -> Any:
     """Create a tool instance from a tool name.
 
@@ -300,7 +317,9 @@ def _create_tool_instance(
         - None if tool should be skipped
     """
     # RAG/file_search tool - uses OpenAI-compatible file_search format
-    if tool_name == "builtin::rag/knowledge_search":
+    if tool_name in {"builtin::rag/knowledge_search", "role_knowledge_search"}:
+        if role and project and is_product_role(role):
+            return RoleKnowledgeSearchTool(project=project, role=role)
         if vector_db_id:
             tool_config = create_rag_tool_config(vector_db_id)
             logger.info("Created file_search tool (vector_store_ids=%s)", vector_db_id)
@@ -320,7 +339,7 @@ def _create_tool_instance(
         logger.warning("Unsupported builtin tool '%s', skipping", tool_name)
         return None
 
-    # Custom MyloWare tools - create fresh instances with run context
+    # Custom AISMR tools - create fresh instances with run context
     # These are NOT cached because they may contain run-specific state
 
     if tool_name == "sora_generate":
@@ -341,8 +360,13 @@ def _create_tool_instance(
         return tool_instance
 
     if tool_name == "remotion_render":
-        tool_instance = RemotionRenderTool(run_id=run_id)
+        tool_instance = RemotionRenderTool(run_id=run_id, project=project)
         logger.info("Created RemotionRenderTool (run_id=%s)", run_id)
+        return tool_instance
+
+    if tool_name == "inspect_render":
+        tool_instance = InspectRenderTool(run_id=run_id)
+        logger.info("Created InspectRenderTool (run_id=%s)", run_id)
         return tool_instance
 
     if tool_name == "upload_post":

@@ -51,7 +51,7 @@ const ServiceInfo: React.FC = () => {
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
         }}>
-          MyloWare
+          AISMR
         </h1>
         <p style={{
           fontSize: 28,

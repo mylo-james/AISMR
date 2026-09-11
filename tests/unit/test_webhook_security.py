@@ -16,7 +16,6 @@ from myloware.config.settings import settings
 from myloware.observability.logging import configure_logging
 from myloware.storage.models import ArtifactType, RunStatus
 
-
 _FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures" / "webhooks"
 
 

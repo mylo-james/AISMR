@@ -4,20 +4,23 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
+from myloware.tools.role_knowledge import RoleKnowledgeSearchTool
 
 
-def test_ideator_agent_requires_vector_db_for_rag():
-    """Fail fast when RAG is requested without a vector DB id."""
+def test_ideator_agent_uses_local_knowledge_without_a_vector_store():
+    """Role reference lookup must not require an old shared vector store."""
     from myloware.agents.factory import create_agent
 
     mock_client = MagicMock()
 
     with patch("myloware.agents.factory.Agent") as mock_agent_class:
         mock_agent_class.return_value = MagicMock()
-        # RAG is in the YAML; missing vector_db_id should raise
-        with pytest.raises(RuntimeError, match="RAG tool requested"):
-            create_agent(mock_client, "aismr", "ideator", vector_db_id=None)
+        create_agent(mock_client, "aismr", "ideator", vector_db_id=None)
+        tools = mock_agent_class.call_args.kwargs["tools"]
+        assert any(isinstance(tool, RoleKnowledgeSearchTool) for tool in tools)
+        assert not any(
+            isinstance(tool, dict) and tool.get("type") == "file_search" for tool in tools
+        )
 
 
 def test_ideator_agent_has_websearch_tool():
@@ -37,8 +40,8 @@ def test_ideator_agent_has_websearch_tool():
         assert has_websearch, f"Expected web_search tool in {tools}"
 
 
-def test_ideator_agent_with_rag_and_websearch():
-    """Test that ideator agent includes both RAG and websearch tools."""
+def test_ideator_agent_with_scoped_knowledge_and_websearch():
+    """A supplied legacy store must not widen the ideator knowledge scope."""
     from myloware.agents.factory import create_agent
 
     mock_client = MagicMock()
@@ -56,7 +59,9 @@ def test_ideator_agent_with_rag_and_websearch():
         # Should have RAG config (dict with type="file_search")
         has_rag = any(isinstance(t, dict) and t.get("type") == "file_search" for t in tools)
 
-        assert has_websearch or has_rag, f"Expected web_search or file_search in {tools}"
+        assert has_websearch
+        assert not has_rag
+        assert any(isinstance(tool, RoleKnowledgeSearchTool) for tool in tools)
 
 
 def test_format_search_context():

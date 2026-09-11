@@ -15,6 +15,7 @@ from myloware.agents.tools.supervisor import (
     StartWorkflowTool,
 )
 from myloware.storage.models import RunStatus
+from myloware.tools.role_knowledge import RoleKnowledgeSearchTool
 
 
 def test_create_supervisor_agent_includes_tools():
@@ -33,6 +34,8 @@ def test_create_supervisor_agent_includes_tools():
         assert any(isinstance(t, GetRunStatusTool) for t in tools)
         assert any(isinstance(t, ListRunsTool) for t in tools)
         assert any(isinstance(t, ApproveGateTool) for t in tools)
+        assert any(isinstance(t, RoleKnowledgeSearchTool) for t in tools)
+        assert not any(isinstance(t, dict) and t.get("type") == "file_search" for t in tools)
 
 
 def test_create_supervisor_agent_requires_instructions(monkeypatch) -> None:
@@ -107,8 +110,10 @@ def test_approve_gate_tool_calls_gate_approver():
 
     tool = ApproveGateTool(
         client_factory=lambda: object(),
-        run_repo_factory=lambda: None,
-        artifact_repo_factory=lambda: None,
+        run_repo_factory=lambda: SimpleNamespace(
+            get=lambda _run_id: SimpleNamespace(workflow_name="motivational")
+        ),
+        artifact_repo_factory=lambda: object(),
         vector_db_id="kb",
         gate_approver=fake_approver,
     )

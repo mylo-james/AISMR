@@ -1,4 +1,4 @@
-"""MyloWare command-line interface.
+"""AISMR command-line interface.
 
 The CLI is organized into submodules under `myloware.cli.*` to keep the surface
 area maintainable as the project grows.
@@ -13,9 +13,9 @@ from myloware.observability import init_observability
 
 
 @click.group()
-@click.version_option(version=get_app_version(), prog_name="myloware")
+@click.version_option(version=get_app_version(), prog_name="aismr")
 def cli() -> None:
-    """MyloWare - Llama Stack multi-agent video production."""
+    """AISMR: reviewed video creation with LangGraph."""
     init_observability()
 
 
@@ -29,6 +29,8 @@ def _register_commands() -> None:
         memory,
         runs,
         stack,
+        studio,
+        tiktok,
         traces,
         webhooks,
         worker,
@@ -42,7 +44,9 @@ def _register_commands() -> None:
     memory.register(cli)
     runs.register(cli)
     stack.register(cli)
+    studio.register(cli)
     traces.register(cli)
+    tiktok.register(cli)
     webhooks.register(cli)
     worker.register(cli)
 

@@ -974,6 +974,10 @@ async def run_workflow_async(
             logger.error("Run not found for async execution: %s", run_id)
             return
 
+        from myloware.workflows.admission import require_legacy_monthly_engine_allowed
+
+        require_legacy_monthly_engine_allowed(run.workflow_name)
+
         try:
             await run_repo.update_async(run_id, status=RunStatus.RUNNING.value)
             await session.commit()

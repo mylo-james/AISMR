@@ -3,7 +3,7 @@ Audience: Technical
 
 # Creating Custom Tools
 
-MyloWare tools extend `ClientTool` from Llama Stack, wrapped as `MylowareBaseTool` which provides:
+AISMR tools extend `ClientTool` from Llama Stack, wrapped as `MylowareBaseTool` which provides:
 - Standardized error handling
 - JSON response formatting
 - Observability integration

@@ -1,4 +1,4 @@
-"""Common FastAPI dependencies for the MyloWare API."""
+"""Common FastAPI dependencies for the AISMR API."""
 
 from __future__ import annotations
 

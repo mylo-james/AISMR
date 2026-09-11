@@ -5,7 +5,7 @@
 
 ## Context
 
-MyloWare has multiple agents (Ideator, Producer, Editor, Publisher) that need:
+AISMR has multiple agents (Ideator, Producer, Editor, Publisher) that need:
 - Different instructions per project (AISMR vs. motivational)
 - Shared base patterns (tools, shields)
 - No code changes to add new projects

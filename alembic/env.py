@@ -5,9 +5,10 @@ from __future__ import annotations
 import logging
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-from alembic import context
+from alembic.ddl.postgresql import PostgresqlImpl
+from sqlalchemy import String, engine_from_config, inspect, pool, text
 
+from alembic import context
 from myloware.config import settings
 from myloware.storage.models import Base
 
@@ -19,6 +20,17 @@ if config.config_file_name is not None:
 logger = logging.getLogger(__name__)
 
 target_metadata = Base.metadata
+
+
+class AismrPostgresqlImpl(PostgresqlImpl):
+    """Preserve existing descriptive revision IDs longer than Alembic's default."""
+
+    __dialect__ = "postgresql"
+
+    def version_table_impl(self, **kwargs):
+        table = super().version_table_impl(**kwargs)
+        table.c.version_num.type = String(128)
+        return table
 
 
 def get_url():
@@ -56,6 +68,20 @@ def run_migrations_online() -> None:
         )
 
         with context.begin_transaction():
+            if connection.dialect.name == "postgresql":
+                inspector = inspect(connection)
+                if inspector.has_table("alembic_version"):
+                    column = next(
+                        c
+                        for c in inspector.get_columns("alembic_version")
+                        if c["name"] == "version_num"
+                    )
+                    if getattr(column["type"], "length", 128) < 128:
+                        connection.execute(
+                            text(
+                                "ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(128)"
+                            )
+                        )
             context.run_migrations()
 
 

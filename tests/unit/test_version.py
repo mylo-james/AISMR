@@ -7,7 +7,7 @@ from myloware.config import settings
 
 def test_version_exists():
     """Verify package has a version string."""
-    pkg_version = version("myloware")
+    pkg_version = version("aismr")
     assert isinstance(pkg_version, str)
     assert pkg_version == "0.1.0"
 

@@ -44,4 +44,4 @@ Negative:
 
 - `src/myloware/knowledge/loader.py`
 - `src/myloware/knowledge/setup.py`
-- `myloware kb setup --help`
+- `aismr kb setup --help`

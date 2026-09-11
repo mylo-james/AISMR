@@ -32,16 +32,24 @@ def pytest_configure(config):
     os.environ["WEBHOOK_BASE_URL"] = "http://localhost:8000"
     # Enable websearch tool config without making any external calls in tests (LLAMA_STACK_PROVIDER=fake).
     os.environ["BRAVE_API_KEY"] = os.environ.get("BRAVE_API_KEY") or "test-brave-key"
-    # Force SQLite for tests to avoid PostgreSQL schema issues.
+    # Keep ordinary tests on SQLite. The dedicated parity invocation can opt in
+    # to an explicitly selected disposable PostgreSQL target.
     #
     # IMPORTANT: do not write SQLite DB files into the repo root (they can become stale and
     # cause confusing schema mismatch failures). Use a per-test-run temp directory instead.
-    test_artifacts_root = Path(
-        os.environ.get("MYLOWARE_TEST_ARTIFACTS_DIR") or (PROJECT_ROOT / ".tmp" / "pytest")
+    parity_requested = "parity" in (config.getoption("markexpr") or "") or any(
+        "test_studio_postgres_parity.py" in str(arg) for arg in config.args
     )
-    test_artifacts_root.mkdir(parents=True, exist_ok=True)
-    run_dir = Path(tempfile.mkdtemp(prefix="run_", dir=str(test_artifacts_root)))
-    os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{run_dir / 'test_default.db'}"
+    parity_url = os.environ.get("AISMR_TEST_POSTGRES_URL")
+    if parity_requested and parity_url:
+        os.environ["DATABASE_URL"] = parity_url
+    else:
+        test_artifacts_root = Path(
+            os.environ.get("MYLOWARE_TEST_ARTIFACTS_DIR") or (PROJECT_ROOT / ".tmp" / "pytest")
+        )
+        test_artifacts_root.mkdir(parents=True, exist_ok=True)
+        run_dir = Path(tempfile.mkdtemp(prefix="run_", dir=str(test_artifacts_root)))
+        os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{run_dir / 'test_default.db'}"
 
 
 @pytest.fixture(autouse=True)
@@ -51,19 +59,22 @@ def block_external_http(monkeypatch):
     Allowlist only:
     - ASGI test host ("test") used with httpx.ASGITransport
     - localhost/loopback for local services
+    - requests whose selected HTTP transport is an in-memory MockTransport
     """
 
     allowed_hosts = {"test", "testserver", "localhost", "127.0.0.1", "0.0.0.0"}
 
     async def _async_guard(self, method, url, *args, **kwargs):  # type: ignore[no-untyped-def]
         u = httpx.URL(url) if not isinstance(url, httpx.URL) else url
-        if u.scheme in {"http", "https"} and (u.host or "") not in allowed_hosts:
+        mocked = isinstance(self._transport_for_url(u), httpx.MockTransport)
+        if not mocked and u.scheme in {"http", "https"} and (u.host or "") not in allowed_hosts:
             raise RuntimeError(f"External HTTP blocked in tests: {u!s}")
         return await _orig_async_request(self, method, url, *args, **kwargs)
 
     def _sync_guard(self, method, url, *args, **kwargs):  # type: ignore[no-untyped-def]
         u = httpx.URL(url) if not isinstance(url, httpx.URL) else url
-        if u.scheme in {"http", "https"} and (u.host or "") not in allowed_hosts:
+        mocked = isinstance(self._transport_for_url(u), httpx.MockTransport)
+        if not mocked and u.scheme in {"http", "https"} and (u.host or "") not in allowed_hosts:
             raise RuntimeError(f"External HTTP blocked in tests: {u!s}")
         return _orig_sync_request(self, method, url, *args, **kwargs)
 

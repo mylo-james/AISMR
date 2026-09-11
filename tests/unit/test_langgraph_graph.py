@@ -135,7 +135,7 @@ async def test_check_checkpointer_health_sqlite(monkeypatch) -> None:
     engine = graph_mod.LangGraphEngine()
     monkeypatch.setattr(graph_mod.settings, "database_url", "sqlite+aiosqlite:///:memory:")
 
-    assert await engine.check_checkpointer_health() is True
+    assert await engine.check_checkpointer_health() is False
 
 
 @pytest.mark.asyncio
@@ -191,7 +191,7 @@ async def test_enter_async_checkpointer_rebuilds_and_sets_dsn(monkeypatch) -> No
     monkeypatch.setattr(graph_mod.AsyncPostgresSaver, "from_conn_string", lambda _dsn: FakeCtx())
 
     await engine._enter_async_checkpointer()
-    assert engine._async_checkpointer_dsn == "postgresql://localhost/db"
+    assert engine._async_checkpointer_target == "postgresql://localhost/db"
 
 
 @pytest.mark.asyncio

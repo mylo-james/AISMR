@@ -1,15 +1,15 @@
 #!/bin/bash
 # =============================================================================
-# MyloWare Fly.io Deployment
+# AISMR Fly.io Deployment
 # =============================================================================
-# Deploys MyloWare to Fly.io
+# Deploys AISMR to Fly.io
 # =============================================================================
 
 set -euo pipefail
 
 APP_NAME="${MYLOWARE_APP_NAME:-myloware-api}"
 
-echo "=== MyloWare Fly.io Deployment ==="
+echo "=== AISMR Fly.io Deployment ==="
 echo "App: $APP_NAME"
 echo ""
 

@@ -13,7 +13,6 @@ from myloware.knowledge.setup import (
     get_existing_vector_store,
 )
 
-
 UPLOAD_CACHE_PATH = Path("data/.kb_upload_cache.json")
 
 

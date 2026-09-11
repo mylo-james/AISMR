@@ -5,59 +5,32 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
 
-env:
-  PYTHON_VERSION: "3.13"
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint
+  python:
+    name: Python checks
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: CLI smoke test
-        run: |
-          myloware --help
-
-      - name: Run Ruff
-        run: ruff check src/ tests/
-
-      - name: Run Black (check)
-        run: black --check src/ tests/
-
-      - name: Run Bandit (security)
-        run: make security
-
-      - name: Validate Alembic migrations (offline)
-        run: make db-migrate-sql
-
-      - name: Run Mypy
-        run: mypy src/ --ignore-missing-imports
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    needs: lint
-
+    timeout-minutes: 15
+    env:
+      PYTHONPATH: src
+      USE_FAKE_PROVIDERS: 'true'
     services:
       postgres:
         image: postgres:15
         env:
-          POSTGRES_USER: myloware
-          POSTGRES_PASSWORD: myloware
-          POSTGRES_DB: myloware_test
+          POSTGRES_USER: aismr
+          POSTGRES_PASSWORD: ci-only
+          POSTGRES_DB: aismr_test
         ports:
           - 5432:5432
         options: >-
@@ -65,143 +38,67 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
+          version: '0.12.8'
+          python-version: '3.13'
+          enable-cache: true
+      - name: Install locked dependencies
+        run: uv sync --locked --extra dev --extra hosted
+      - name: Check Python
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: CLI smoke test
-        run: |
-          myloware --help
-
-      - name: Run unit tests
+          uv run --no-sync aismr --help
+          uv run --no-sync ruff check src/ tests/
+          uv run --no-sync black --check src/ tests/
+          uv run --no-sync make security
+          uv run --no-sync mypy src/ --ignore-missing-imports
+      - name: Unit tests and coverage
+        run: uv run --no-sync pytest tests/unit/ -q --tb=short --cov=src --cov-report=xml --cov-fail-under=80
+      - name: Migration and PostgreSQL checks
         env:
-          PYTHONPATH: src
-          DATABASE_URL: postgresql://myloware:myloware@localhost:5432/myloware_test
-          LLAMA_STACK_URL: http://localhost:5001
-          LLAMA_STACK_MODEL: meta-llama/Llama-3.2-3B-Instruct
-          API_KEY: test-api-key
-          USE_FAKE_PROVIDERS: "true"
+          AISMR_TEST_POSTGRES_URL: postgresql+asyncpg://aismr:ci-only@localhost:5432/aismr_test
         run: |
-          pytest tests/unit/ -v --tb=short --cov=src --cov-report=xml --cov-fail-under=80
-
+          uv run --no-sync make db-migrate-sql
+          uv run --no-sync pytest tests/unit/test_studio_migration.py tests/integration/test_studio_postgres_parity.py -q --tb=short
+      - name: Validate evaluation fixtures without provider calls
+        run: uv run --no-sync make eval-dry
       - name: Upload coverage
-        uses: codecov/codecov-action@v4
+        uses: actions/upload-artifact@v4
         with:
-          files: ./coverage.xml
-          fail_ci_if_error: false
+          name: coverage
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 7
 
-  eval:
-    name: Eval Gate
+  web:
+    name: Web and renderer
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
-    needs: [lint, test]
-    # Skip eval for docs-only changes or when [skip eval] is in commit message
-    if: |
-      !contains(github.event.head_commit.message, '[skip eval]') &&
-      !contains(github.event.head_commit.message, '[skip-eval]')
-
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: services/remotion/package-lock.json
+      - name: Test web and release checks
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: Run eval dry-run
-        env:
-          PYTHONPATH: src
-          USE_FAKE_PROVIDERS: "true"
+          node --check web/demo/app.js
+          node --test tests/unit/test_demo_progress.cjs scripts/deploy/verify-vercel-candidate.test.mjs
+      - name: Test and build renderer
         run: |
-          # Dry-run to validate dataset loads correctly
-          make eval-dry
-          echo "✅ Eval dataset validation passed"
-
-      - name: Verify eval infrastructure
-        env:
-          PYTHONPATH: src
-        run: |
-          # Verify eval module imports work
-          python -c "from myloware.observability.evaluation import load_eval_dataset, run_eval_pipeline; print('✅ Eval module imports OK')"
-          # Verify dataset exists and has correct structure
-          python -c "
-          from myloware.observability.evaluation import load_eval_dataset
-          cases = load_eval_dataset('data/eval/ideator_test_cases.json')
-          assert len(cases) >= 10, f'Need at least 10 test cases, got {len(cases)}'
-          print(f'✅ Dataset has {len(cases)} test cases')
-          "
-
-  build:
-    name: Build Docker
-    runs-on: ubuntu-latest
-    needs: [test, eval]
-    # Build even if eval is skipped (for docs changes)
-    if: always() && needs.test.result == 'success'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
+          npm ci --prefix services/remotion
+          npm run test:unit --prefix services/remotion
+          npm run build --prefix services/remotion
+      - uses: docker/setup-buildx-action@v3
+      - name: Check the local application image builds
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
-          tags: myloware:${{ github.sha }}
+          tags: aismr:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: staging
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Fly CLI
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Deploy to Fly.io Staging
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          if [ -z "$FLY_API_TOKEN" ]; then
-            echo "Skipping staging deploy: secrets.FLY_API_TOKEN is not set."
-            exit 0
-          fi
-          flyctl deploy --app myloware-api-staging --remote-only

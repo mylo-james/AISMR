@@ -1,1 +1,1 @@
-"""Unit tests for MyloWare."""
+"""Unit tests for AISMR."""

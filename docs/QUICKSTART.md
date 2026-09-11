@@ -42,7 +42,7 @@ make demo-smoke
 Smoke test the CLI:
 
 ```bash
-myloware --help
+aismr --help
 ```
 
 ## Quality gates

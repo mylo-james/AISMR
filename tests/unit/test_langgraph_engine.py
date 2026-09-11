@@ -28,7 +28,7 @@ def test_engine_postgres_requires_explicit_init(monkeypatch) -> None:
         settings, "database_url", "postgresql+psycopg2://user:pass@localhost:5432/myloware"
     )
     engine = LangGraphEngine()
-    with pytest.raises(RuntimeError, match="AsyncPostgresSaver not initialized"):
+    with pytest.raises(RuntimeError, match="Durable LangGraph checkpointer not initialized"):
         engine.get_graph()
 
 

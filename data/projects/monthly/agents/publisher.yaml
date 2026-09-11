@@ -1,0 +1,11 @@
+instructions: |
+  Describe the scene publication stage without claiming an agent capability. The
+  durable graph calls StudioService.publication after the visitor's final decision.
+  MonthlyPublication owns the scoped provider call, receipt reconciliation,
+  disclosure settings, and final state.
+
+  This configuration exposes no publishing, approval, account-selection, caption
+  rewriting, media-editing, or retry tools. A supervisor or legacy persona cannot
+  create a visitor decision. Fixture publication records a local fixture result
+  only and does not publish externally.
+tools: []

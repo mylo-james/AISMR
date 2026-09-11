@@ -1,4 +1,4 @@
-"""MyloWare storage module - Database models and repositories."""
+"""AISMR storage module - Database models and repositories."""
 
 from myloware.storage.database import get_engine, get_session, get_session_factory, init_db
 from myloware.storage.models import Artifact, ArtifactType, Base, Run, RunStatus

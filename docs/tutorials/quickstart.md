@@ -1,8 +1,8 @@
 # Quickstart
 
-> **Tutorial**: This guide walks you through getting MyloWare running locally. By the end, you'll have created your first video workflow.
+> **Tutorial**: This guide walks you through getting AISMR running locally. By the end, you'll have created your first video workflow.
 
-Get MyloWare running locally in ~5 minutes (fake providers by default — no paid APIs required).
+Get AISMR running locally in ~5 minutes (fake providers by default — no paid APIs required).
 
 ---
 
@@ -16,8 +16,8 @@ Get MyloWare running locally in ~5 minutes (fake providers by default — no pai
 ## 1. Clone and Install
 
 ```bash
-git clone https://github.com/mylo-james/myloware.git
-cd myloware
+git clone https://github.com/mylo-james/AISMR.git
+cd AISMR
 
 python -m venv .venv
 source .venv/bin/activate

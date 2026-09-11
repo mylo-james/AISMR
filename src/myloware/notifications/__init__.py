@@ -1,4 +1,4 @@
-"""Notification services for MyloWare."""
+"""Notification services for AISMR."""
 
 from myloware.notifications.telegram import NotificationResult, TelegramNotifier
 

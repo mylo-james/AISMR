@@ -1,4 +1,4 @@
--- Initialize databases for MyloWare and Langfuse
+-- Initialize databases for AISMR and Langfuse
 -- This script runs on first PostgreSQL startup
 
 -- Create databases

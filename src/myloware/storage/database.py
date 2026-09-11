@@ -19,6 +19,7 @@ from sqlalchemy.pool import StaticPool, NullPool
 from myloware.config import settings
 from myloware.observability.logging import get_logger
 from myloware.storage.models import Base
+from myloware.storage import studio_models  # noqa: F401 - register additive studio tables
 
 logger = get_logger(__name__)
 

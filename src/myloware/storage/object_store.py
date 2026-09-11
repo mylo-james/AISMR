@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from functools import lru_cache
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -22,8 +23,8 @@ from myloware.config import settings
 __all__ = [
     "S3ObjectRef",
     "build_s3_uri",
-    "parse_s3_uri",
     "get_s3_store",
+    "parse_s3_uri",
     "resolve_s3_uri_async",
 ]
 
@@ -65,10 +66,22 @@ class S3Store:
     """Minimal S3 helper for uploads + presigned GET URLs."""
 
     def __init__(self) -> None:
+        from botocore.config import Config
+
         boto3 = _require_boto3()
         endpoint_url = settings.transcode_s3_endpoint_url or None
         region_name = settings.transcode_s3_region or None
-        self._client = boto3.client("s3", endpoint_url=endpoint_url, region_name=region_name)
+        self._client = boto3.client(
+            "s3",
+            endpoint_url=endpoint_url,
+            region_name=region_name,
+            config=Config(
+                signature_version="s3v4",
+                connect_timeout=5,
+                read_timeout=15,
+                retries={"max_attempts": 3, "mode": "standard"},
+            ),
+        )
 
     async def upload_file_async(
         self,
@@ -105,6 +118,38 @@ class S3Store:
             )
 
         return await asyncio.to_thread(_presign)
+
+    async def verify_object_async(
+        self, *, uri: str, expected_sha256: str, expected_bytes: int
+    ) -> dict[str, str]:
+        """Hash an existing object without persisting media on the function's disk."""
+        ref = parse_s3_uri(uri)
+
+        def verify() -> dict[str, str]:
+            response = self._client.get_object(Bucket=ref.bucket, Key=ref.key)
+            body = response["Body"]
+            try:
+                if response["ContentLength"] != expected_bytes:
+                    raise ValueError("Recorded R2 object size changed")
+                actual, size = sha256(), 0
+                for chunk in body.iter_chunks(chunk_size=1024 * 1024):
+                    size += len(chunk)
+                    if size > expected_bytes:
+                        raise ValueError("Recorded R2 object exceeds the approved size")
+                    actual.update(chunk)
+                if size != expected_bytes or actual.hexdigest() != expected_sha256:
+                    raise ValueError("Recorded R2 object hash changed")
+                return {"etag": response["ETag"]}
+            finally:
+                body.close()
+
+        return await asyncio.to_thread(verify)
+
+    async def require_object_etag_async(self, *, uri: str, expected_etag: str) -> None:
+        ref = parse_s3_uri(uri)
+        response = await asyncio.to_thread(self._client.head_object, Bucket=ref.bucket, Key=ref.key)
+        if response.get("ETag") != expected_etag:
+            raise ValueError("Recorded R2 object identity changed")
 
 
 @lru_cache(maxsize=1)

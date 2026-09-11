@@ -1,31 +1,33 @@
-"""FastAPI application for MyloWare API."""
+"""FastAPI application for AISMR API."""
 
 from __future__ import annotations
 
+import os
+import time
 from contextlib import asynccontextmanager
+from pathlib import Path as _Path
 from typing import Any, AsyncGenerator, Awaitable, Callable
 from uuid import uuid4
 
-import os
-
+import sentry_sdk
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.requests import Request
-from fastapi.responses import Response, JSONResponse
+from fastapi.responses import JSONResponse, Response
+from fastapi.staticfiles import StaticFiles as _StaticFiles
+from prometheus_client import Counter, Histogram
 from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
-from myloware.api.rate_limit import key_api_key_or_ip
-
-import time
-import sentry_sdk
-from prometheus_client import Counter, Histogram
 
 from myloware.api import routes
 from myloware.api.dependencies import api_key_header, verify_api_key
 from myloware.api.errors import DomainError, to_http_exception
 from myloware.api.middleware.safety import safety_shield_middleware
+from myloware.api.rate_limit import key_api_key_or_ip
 from myloware.api.routes import admin, chat, langgraph, media, public_demo, runs, telegram, webhooks
 from myloware.api.routes import metrics as metrics_route
+from myloware.api.routes.studio import router as studio_router
+from myloware.api.routes.studio_internal import router as studio_internal_router
 from myloware.app_version import get_app_version
 from myloware.config import settings
 from myloware.config.provider_modes import effective_llama_stack_provider
@@ -130,7 +132,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     from myloware.observability import init_observability
 
     init_observability()
-    logger.info("Starting MyloWare API...")
+    logger.info("Starting AISMR API...")
 
     # LangGraph engine lifecycle (explicit; stored on app.state for handlers).
     if settings.use_langgraph_engine:
@@ -170,10 +172,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         if settings.fail_fast_on_startup:
             raise
 
-    # Initialize LangGraph async checkpointer when using Postgres-backed checkpoints.
-    # In SQLite fast-lane/test mode we use an in-memory checkpointer (MemorySaver) and
-    # should not attempt to connect AsyncPostgresSaver.
-    if settings.use_langgraph_engine and not settings.database_url.startswith("sqlite"):
+    # The public library has its own database. Bootstrap it once here, never
+    # from a read route; absent local configuration leaves gallery unavailable.
+    try:
+        from myloware.config.studio import get_studio_settings
+        from myloware.storage.database import get_async_session_factory
+        from myloware.storage.studio_store import StudioStore
+        from myloware.studio.portfolio_runtime import open_portfolio_library
+
+        studio_store = StudioStore(get_async_session_factory(), get_studio_settings())
+        async with open_portfolio_library(studio_store) as library:
+            await library.initialize()
+        app.state.portfolio_library_ready = True
+    except Exception as exc:
+        app.state.portfolio_library_ready = False
+        logger.info("Portfolio library startup skipped or unavailable: %s", exc)
+
+    # Initialize the durable saver for file SQLite and PostgreSQL. Explicit
+    # :memory: test databases remain ephemeral.
+    if settings.use_langgraph_engine:
         try:
             engine = getattr(app.state, "langgraph_engine", None)
             if engine is None:
@@ -294,7 +311,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
-    logger.info("Shutting down MyloWare API...")
+    logger.info("Shutting down AISMR API...")
 
     # Cleanup LangGraph async checkpointer
     if settings.use_langgraph_engine:
@@ -311,8 +328,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(
-    title="MyloWare API",
-    description="Llama Stack-native multi-agent video production platform",
+    title="AISMR API",
+    description="AISMR: a LangGraph workflow for reviewed surreal video creation",
     version=get_app_version(),
     lifespan=lifespan,
 )
@@ -366,7 +383,8 @@ async def timing_middleware(
             status=response.status_code,
         ).inc()
         REQUEST_LATENCY.labels(path=path_label).observe(duration_ms / 1000.0)
-    except Exception as metrics_exc:  # pragma: no cover - metrics should not break requests
+    # Metrics must not fail an otherwise valid request.
+    except Exception as metrics_exc:  # noqa: BLE001
         logger.debug(
             "metrics_observe_failed",
             exc=str(metrics_exc),
@@ -417,6 +435,8 @@ async def domain_error_handler(request: Request, exc: DomainError) -> JSONRespon
 auth_deps = [Depends(verify_api_key)]
 app.include_router(routes.health.router)  # Health check is public (for Docker/K8s)
 app.include_router(public_demo.router)
+app.include_router(studio_router)
+app.include_router(studio_internal_router)
 app.include_router(routes.feedback.router, prefix="/v1", dependencies=auth_deps)
 app.include_router(runs.router, prefix="/v1/runs", dependencies=auth_deps)
 app.include_router(chat.router, dependencies=auth_deps)
@@ -429,3 +449,9 @@ app.include_router(metrics_route.router)
 
 
 __all__ = ["app", "verify_api_key", "api_key_header", "limiter"]
+
+
+# AISMR is served from the same origin as its visitor API.
+_studio_web_root = _Path(__file__).resolve().parents[3] / "web" / "demo"
+if _studio_web_root.is_dir():
+    app.mount("/", _StaticFiles(directory=str(_studio_web_root), html=True), name="studio-web")

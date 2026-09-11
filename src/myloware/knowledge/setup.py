@@ -226,7 +226,11 @@ def register_knowledge_base(
                 for candidate in provider_candidates:
                     if candidate in tried:
                         continue
-                    logger.info("Vector store provider %s unavailable; retrying with %s", current_provider, candidate)
+                    logger.info(
+                        "Vector store provider %s unavailable; retrying with %s",
+                        current_provider,
+                        candidate,
+                    )
                     extra_body["provider_id"] = candidate
                     tried.add(candidate)
                     try:

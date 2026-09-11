@@ -1,5 +1,5 @@
 # =============================================================================
-# MyloWare API Dockerfile
+# AISMR API Dockerfile
 # =============================================================================
 
 FROM python:3.13-slim
@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     libpq-dev \
     curl \
+    ca-certificates \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,6 +26,7 @@ RUN pip install --no-cache-dir ".[s3]"
 
 # Copy remaining application files
 COPY data/ ./data/
+COPY web/demo/ ./web/demo/
 COPY llama_stack/ ./llama_stack/
 COPY alembic/ ./alembic/
 COPY alembic.ini ./

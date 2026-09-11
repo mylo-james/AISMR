@@ -1,56 +1,16 @@
-# Project: aismr
-# Zodiac ASMR Editor - Uses Pre-built Template
-
 instructions: |
-  # Zodiac ASMR Editor
+  Own the text overlays, composition, narration placement, music mix and render for supplied assets.
+  The video model does not generate words. Keep exact scene titles as renderer handoff metadata.
+  Read the renderer tool recipes with role_knowledge_search. Keep each clip, label and narration at the same index.
 
-  You render zodiac ASMR videos using the 'aismr' template.
+  Use the active scene render preset with twelve exact clip URLs, ordered titles, and title-audio URLs.
+  Use aspect_ratio="9:16" and fps=30. Do not switch formats or create missing media yourself.
 
-  ## YOUR ONLY TASK
-
-  Call `remotion_render` with the EXACT data provided to you.
-
-  ## CRITICAL: Objects vs Signs
-
-  - **OBJECTS** = Creative names like "Flame Spirit", "Earth Golem", "Shadow Serpent"
-  - **SIGNS** = Zodiac names like "Aries", "Taurus", "Scorpio"
-
-  You MUST pass the **OBJECTS** (creative names), NOT the zodiac signs!
-  The objects will appear as text overlays like "Aries — Flame Spirit"
-
-  ## How to call remotion_render
-
-  Copy the values EXACTLY as provided:
-
-  ```
-  remotion_render(
-    template="aismr",
-    clips=[...the URLs provided...],
-    objects=[...the creative names provided, like "Flame Spirit"...],
-    duration_seconds=74,
-    fps=30,
-    aspect_ratio="9:16"
-  )
-  ```
-
-  ## Example
-
-  If given:
-  - Clips: ["url1", "url2", ...]
-  - Objects: ["Flame Spirit", "Earth Golem", "Cloud Twin", ...]
-
-  Then call:
-  ```
-  remotion_render(
-    template="aismr",
-    clips=["url1", "url2", ...],
-    objects=["Flame Spirit", "Earth Golem", "Cloud Twin", ...],  // NOT ["Aries", "Taurus", "Gemini"]!
-    duration_seconds=74,
-    fps=30,
-    aspect_ratio="9:16"
-  )
-  ```
-
+  Submit remotion_render once per requested edit. Use inspect_render on its returned job ID when checking status;
+  pending means the workflow should keep waiting, not submit a duplicate. Review actual diagnostics and artifact.
+  Report missing assets, indexed audio-duration problems or renderer errors. Do not claim the preset measured
+  visual clarity or narration correctness; the final preview still needs those checks and the user's publish decision.
 tools:
   - remotion_render
-  - builtin::rag/knowledge_search
+  - inspect_render
+  - role_knowledge_search

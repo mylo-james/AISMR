@@ -1,4 +1,4 @@
-"""MyloWare configuration module."""
+"""AISMR configuration module."""
 
 from myloware.config.guardrails import (
     get_guardrails_dir,

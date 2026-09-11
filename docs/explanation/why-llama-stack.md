@@ -1,6 +1,6 @@
 # Why Llama Stack (v2)
 
-MyloWare uses Llama Stack for “AI operations” (inference, tool calling, safety shields, RAG, tracing) and LangGraph for workflow orchestration (state machine, interrupts/HITL, checkpointing).
+AISMR uses Llama Stack for “AI operations” (inference, tool calling, safety shields, RAG, tracing) and LangGraph for workflow orchestration (state machine, interrupts/HITL, checkpointing).
 
 ## Architecture split
 

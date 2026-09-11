@@ -118,6 +118,40 @@ def test_start_workflow_executes_orchestrator_when_no_dedupe() -> None:
     assert called["count"] == 1
 
 
+@pytest.mark.parametrize("project", [None, 1, "", "../aismr", "unknown-project"])
+def test_start_workflow_rejects_invalid_project_before_effects(project: object) -> None:
+    calls = {"client": 0, "run_repo": 0, "artifact_repo": 0, "orchestrator": 0}
+
+    def client_factory() -> object:
+        calls["client"] += 1
+        return object()
+
+    def run_repo_factory() -> _FakeRunRepo:
+        calls["run_repo"] += 1
+        return _FakeRunRepo(None)
+
+    def artifact_repo_factory() -> _FakeArtifactRepo:
+        calls["artifact_repo"] += 1
+        return _FakeArtifactRepo()
+
+    def orchestrator(**_kwargs):  # type: ignore[no-untyped-def]
+        calls["orchestrator"] += 1
+        raise AssertionError("invalid project must not reach the orchestrator")
+
+    tool = StartWorkflowTool(
+        client_factory=client_factory,
+        run_repo_factory=run_repo_factory,
+        artifact_repo_factory=artifact_repo_factory,
+        orchestrator=orchestrator,
+    )
+
+    result = tool.run_impl(project=project, brief="brief")  # type: ignore[arg-type]
+
+    assert result["error"] is True
+    assert result["error_type"] == "invalid_project"
+    assert calls == {"client": 0, "run_repo": 0, "artifact_repo": 0, "orchestrator": 0}
+
+
 @pytest.mark.asyncio
 async def test_start_workflow_run_impl_thread_path(monkeypatch) -> None:
     tool = StartWorkflowTool(client_factory=lambda: object())

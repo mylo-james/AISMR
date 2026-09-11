@@ -1,7 +1,7 @@
 """Knowledge document loader for Vector I/O ingestion.
 
 Supports:
-- Nested directory structures (e.g., video-generation/veo3-prompting-guide.md)
+- Nested directory structures (e.g., video-generation/wan-2.2-fast-prompting.md)
 - Enhanced metadata extraction (category, section, document path)
 - Both global and project-specific knowledge bases
 """
@@ -14,6 +14,8 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterator, List, Tuple
+
+import yaml  # type: ignore
 
 from myloware.paths import get_repo_root
 
@@ -28,7 +30,7 @@ class KnowledgeDocument:
     Attributes:
         id: Unique identifier for the document
         content: Full text content of the document
-        filename: Original filename (e.g., "veo3-prompting-guide.md")
+        filename: Original filename (e.g., "wan-2.2-fast-prompting.md")
         metadata: Additional metadata for retrieval context
     """
 
@@ -38,14 +40,57 @@ class KnowledgeDocument:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
+def parse_document_metadata(content: str) -> tuple[str, dict[str, Any]]:
+    """Separate a role declaration from document text; untagged files stay unscoped.
+
+    Roles are source-owned knowledge eligibility, not user-supplied tool arguments.
+    Legacy documents remain loadable for maintenance but are not eligible for
+    the role knowledge tool until explicitly classified.
+    """
+    metadata: dict[str, Any] = {"roles": [], "status": "legacy"}
+    lines = content.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return content, metadata
+    end = next((i for i in range(1, len(lines)) if lines[i].strip() == "---"), None)
+    if end is None:
+        raise ValueError("Knowledge front matter is missing its closing delimiter")
+    header = yaml.safe_load("".join(lines[1:end]))
+    if not isinstance(header, dict):
+        raise TypeError("Knowledge front matter must be a mapping")
+    roles = header.get("roles", [])
+    valid_roles = {"ideator", "producer", "editor", "publisher", "supervisor"}
+    if not isinstance(roles, list) or any(
+        not isinstance(role, str) or role not in valid_roles for role in roles
+    ):
+        raise ValueError("Knowledge roles must be a list of known agent roles")
+    status = header.get("status", "legacy")
+    if not isinstance(status, str) or status not in {"active", "legacy", "draft"}:
+        raise ValueError("Knowledge status must be active, legacy, or draft")
+    if status == "active" and not roles:
+        raise ValueError("Active knowledge must declare at least one role")
+    metadata.update(roles=list(dict.fromkeys(roles)), status=status)
+    if header.get("reviewed"):
+        metadata["reviewed"] = str(header["reviewed"])
+    return "".join(lines[end + 1 :]).lstrip(), metadata
+
+
 def get_knowledge_dir() -> Path:
     """Get global knowledge data directory."""
     return ROOT / "data" / "knowledge"
 
 
 def get_project_knowledge_dir(project_id: str) -> Path:
-    """Get project-specific knowledge directory."""
-    return ROOT / "data" / "projects" / project_id / "knowledge"
+    """Resolve one project knowledge directory without traversal or symlink redirects."""
+    if not isinstance(project_id, str) or not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9_-]*", project_id
+    ):
+        raise ValueError("Knowledge project must be a simple project identifier")
+    projects_root = (ROOT / "data" / "projects").resolve()
+    project_dir = projects_root / project_id
+    knowledge_dir = project_dir / "knowledge"
+    if project_dir.resolve() != project_dir or knowledge_dir.resolve() != knowledge_dir:
+        raise ValueError("Project knowledge cannot redirect through a symlink")
+    return knowledge_dir
 
 
 def extract_first_heading(content: str) -> str:
@@ -133,7 +178,11 @@ def _load_documents_from_dir(
             continue
 
         files.append(doc_path)
-        content = doc_path.read_text(encoding="utf-8") if read_content else ""
+        # Refuse symlink escapes before reading any document content.
+        if not doc_path.resolve().is_relative_to(knowledge_dir.resolve()):
+            raise ValueError(f"Knowledge document escapes its directory: {doc_path.name}")
+        raw_content = doc_path.read_text(encoding="utf-8") if read_content else ""
+        content, role_metadata = parse_document_metadata(raw_content)
 
         # Calculate relative path from knowledge dir
         relative_path = doc_path.relative_to(knowledge_dir)
@@ -156,6 +205,7 @@ def _load_documents_from_dir(
                 content=content,
                 filename=doc_path.name,
                 metadata={
+                    **role_metadata,
                     "source": "knowledge_base",
                     "kb_type": kb_type,
                     "filename": doc_path.name,

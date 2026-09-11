@@ -40,6 +40,10 @@ def configure_logging() -> None:
     )
 
     logging.basicConfig(level=logging.INFO)
+    # Request URLs may contain scoped media capabilities. Durable stage events
+    # carry safe operational detail without logging those bearer URLs.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:

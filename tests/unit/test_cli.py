@@ -16,12 +16,12 @@ from myloware.workflows.state import WorkflowResult
 
 
 def test_version_command():
-    """myloware --version shows package version."""
+    """aismr --version shows package version."""
 
     result = CliRunner().invoke(cli, ["--version"])
 
     assert result.exit_code == 0
-    assert version("myloware") in result.output
+    assert version("aismr") in result.output
 
 
 def test_worker_group_help():

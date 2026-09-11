@@ -1,0 +1,93 @@
+name: AISMR deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        type: choice
+        options: [stage, promote]
+        required: true
+      source_sha:
+        type: string
+        required: true
+      deployment_id:
+        description: Reviewed staged Vercel deployment ID, required for promotion
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+# Match the other projects: serialize stateful release operations; never cancel them.
+concurrency:
+  group: aismr-production
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: vars.AISMR_DEPLOYMENT_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    env:
+      VERCEL_TELEMETRY_DISABLED: '1'
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.AISMR_VERCEL_PROJECT_ID }}
+      CONFIG_REVISION: ${{ vars.AISMR_CONFIG_REVISION }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      DEPLOYMENT_ID: ${{ inputs.deployment_id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Validate the named source and target
+        run: |
+          [[ "$SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          test "$SOURCE_SHA" = "$GITHUB_SHA"
+          [[ "$VERCEL_PROJECT_ID" =~ ^prj_[A-Za-z0-9]+$ ]]
+          [[ "$CONFIG_REVISION" =~ ^[A-Za-z0-9._-]{1,128}$ ]]
+          test -n "$VERCEL_ORG_ID"
+          node --check web/demo/app.js
+          node --check web/demo/progress.js
+          test -f web/demo/index.html
+      - name: Install the same native Vercel CLI used by the sibling deployment
+        run: npm install --prefix "$RUNNER_TEMP/vercel-cli" --no-audit --no-fund vercel@59.14.0
+      - name: Stage without changing the canonical domain
+        if: inputs.operation == 'stage'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          vc="$RUNNER_TEMP/vercel-cli/node_modules/.bin/vercel"
+          "$vc" pull --yes --environment=production --token="$VERCEL_TOKEN"
+          "$vc" deploy --prod --skip-domain --yes --json --meta "deploymentSourceSha=$SOURCE_SHA" --meta "deploymentConfigRevision=$CONFIG_REVISION" --token="$VERCEL_TOKEN" > stage-result.json
+          export DEPLOYMENT_ID="$(node -p 'JSON.parse(require("node:fs").readFileSync("stage-result.json", "utf8")).deployment.id')"
+          [[ "$DEPLOYMENT_ID" =~ ^dpl_[A-Za-z0-9]+$ ]]
+          "$vc" inspect "$DEPLOYMENT_ID" --wait --json --token="$VERCEL_TOKEN" > /dev/null
+          "$vc" api "/v13/deployments/$DEPLOYMENT_ID" --method GET --raw --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN" > staged-deployment.json
+          node scripts/deploy/verify-vercel-candidate.mjs staged-deployment.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: inputs.operation == 'stage'
+        with:
+          name: aismr-staged-deployment
+          path: staged-deployment.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Promote only the reviewed staged source and configuration
+        if: inputs.operation == 'promote'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          PROMOTION_ENABLED: ${{ vars.AISMR_PROMOTION_ENABLED }}
+        run: |
+          test "$PROMOTION_ENABLED" = true
+          [[ "$DEPLOYMENT_ID" =~ ^dpl_[A-Za-z0-9]+$ ]]
+          vc="$RUNNER_TEMP/vercel-cli/node_modules/.bin/vercel"
+          "$vc" inspect "$DEPLOYMENT_ID" --wait --json --token="$VERCEL_TOKEN" > /dev/null
+          "$vc" api "/v13/deployments/$DEPLOYMENT_ID" --method GET --raw --scope="$VERCEL_ORG_ID" --token="$VERCEL_TOKEN" > candidate.json
+          node scripts/deploy/verify-vercel-candidate.mjs candidate.json
+          "$vc" promote "$DEPLOYMENT_ID" --yes --token="$VERCEL_TOKEN"
+          curl --fail --silent --show-error --max-time 20 https://aismr.mjames.dev/ > canonical.html
+          grep -q 'AISMR' canonical.html
