@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "profile_version": "EXAMPLE-NOT-VALID",
+  "receipt_id": "REPLACE-WITH-OWNER-RECEIPT-ID",
+  "expires_at": "2000-01-01T00:00:00Z",
+  "provider_policy": {
+    "reference": "REPLACE-WITH-OWNER-VERIFIED-PROVIDER-POLICY-REFERENCE",
+    "permitted_video_model_ids": ["REPLACE-WITH-ACTUAL-VIDEO-MODEL-ID"],
+    "permitted_narration_model_ids": ["REPLACE-WITH-ACTUAL-NARRATION-MODEL-ID"]
+  },
+  "music": {
+    "id": "REPLACE-WITH-CONFIGURED-MUSIC-ID",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "license_reference": "REPLACE-WITH-OWNER-VERIFIED-LICENSE-REFERENCE",
+    "attribution": "REPLACE-WITH-REQUIRED-ATTRIBUTION"
+  },
+  "labels": {
+    "permission_reference": "REPLACE-WITH-OWNER-VERIFIED-LABEL-PERMISSION",
+    "attribution": "REPLACE-WITH-REQUIRED-LABEL-ATTRIBUTION"
+  }
+}

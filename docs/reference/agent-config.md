@@ -1,140 +1,57 @@
-# Agent Configuration
+# Agent configuration and role knowledge
 
-YAML schema for agent definitions.
+Shared YAML lives in data/shared/agents; project overrides live in
+data/projects/<project>/agents. Project instructions replace the shared instruction
+string. The factory then appends its role contract, so project overrides cannot
+erase the declared responsibility. This is an instruction boundary, not a guarantee
+of model behavior. The tool allowlist enforces which effects the agent can request.
 
----
+| Role | Concern | Owned tools |
+| --- | --- | --- |
+| ideator | concepts | role_knowledge_search, optional web research |
+| producer | raw assets | sora_generate, role_knowledge_search |
+| editor | text, composition and sound | remotion_render, inspect_render, role_knowledge_search |
+| publisher | reviewed post submission | upload_post, role_knowledge_search |
+| supervisor | routing, status and explicit user decisions | start_workflow, get_run_status, list_runs, approve_gate, role_knowledge_search |
 
-## File Locations
+The monthly renderer adds on-screen text and accepts supplied narration/music assets.
+It does not implement the planned Wan, Kokoro synthesis or publisher migration. Model overrides retain their existing behavior.
+Existing approval gates and safety checks remain in the workflow and its tools.
+This cleanup does not add caller identity, a user-decision receipt or artifact revision
+binding to approve_gate. Its supervisor-facing tool remains model-callable with a
+content_override. The role instruction to relay an explicit user decision is advisory;
+it is not an authorization barrier for an untrusted visitor demo.
 
-```
-data/
-├── shared/agents/       # Base configs (all projects)
-│   ├── ideator.yaml
-│   ├── producer.yaml
-│   ├── editor.yaml
-│   └── publisher.yaml
-│
-└── projects/{project}/agents/  # Project overrides
-    └── ideator.yaml
-```
+## Source-owned reference documents
 
----
-
-## Schema
-
-```yaml
-# Required
-role: string           # Agent role identifier
-instructions: string   # System prompt (supports multi-line)
-
-# Optional
-description: string    # Human-readable description
-model: string          # Model ID (default: from settings)
-
-tools:                 # List of tools
-  - builtin::websearch
-  - builtin::rag/knowledge_search
-  - custom_tool_name
-
-sampling_params:       # Generation parameters
-  strategy:
-    type: greedy       # or "top_p", "top_k"
-  temperature: 0.7     # Only for non-greedy
-  max_tokens: 2048
-```
-
----
-
-## Built-in Tools
-
-| Tool | Description |
-|------|-------------|
-| `builtin::websearch` | Web search via Brave |
-| `builtin::rag/knowledge_search` | Query vector database |
-| `builtin::memory/query` | Query memory banks |
-
----
-
-## Config Inheritance
-
-Project configs merge with base configs:
+Active Markdown in data/knowledge and the selected project's knowledge directory
+declares front matter:
 
 ```yaml
-# data/shared/agents/ideator.yaml (base)
-role: ideator
-instructions: |
-  You generate video ideas.
-tools:
-  - builtin::websearch
-
-# data/projects/aismr/agents/ideator.yaml (override)
-instructions: |
-  You generate ASMR video ideas.
-  Focus on relaxation and triggers.
-```
-
-**Result**: Project instructions replace base, tools are inherited.
-
 ---
-
-## Example: Ideator
-
-```yaml
-role: ideator
-description: Generates creative video concepts
-
-model: meta-llama/Llama-3.2-3B-Instruct
-
-instructions: |
-  You are the Ideator for video production.
-
-  ## Your Job
-  Generate 3 unique video ideas based on the brief.
-
-  ## Tools
-  - Use websearch for trending topics
-  - Use knowledge_search for project context
-
-  ## Output Format
-  For each idea:
-  1. **Title**: Catchy, specific
-  2. **Hook**: First 3 seconds
-  3. **Description**: 2-3 sentences
-
-tools:
-  - builtin::websearch
-  - builtin::rag/knowledge_search
-
-sampling_params:
-  strategy:
-    type: greedy
-```
-
+roles: [producer]
+status: active
+reviewed: 2026-09-09
 ---
-
-## Example: Producer
-
-```yaml
-role: producer
-description: Creates video generation prompts
-
-instructions: |
-  You are the Producer.
-
-  ## Your Job
-  Convert approved ideas into video prompts.
-
-  ## Output Format
-  For each clip:
-  - visual_prompt: Detailed scene description
-  - voice_over: Optional narration
-  - duration: Seconds (5-15)
-
-tools:
-  - sora_generate
-  - builtin::rag/knowledge_search
-
-sampling_params:
-  strategy:
-    type: greedy
 ```
+
+role_knowledge_search fixes project/role at construction. It selects active documents
+for that role before matching query terms and returns bounded excerpts with source
+metadata. It is local lexical lookup, not semantic search or episodic memory.
+Untagged, draft and legacy references are excluded from agent results. Query arguments
+cannot select a different role, project or arbitrary path. Keep documents concise
+so a role can retrieve the relevant contract without unrelated context.
+
+The low-level file_search helpers and vector-store ingestion/maintenance/evaluation
+APIs remain available. The product factories translate the old configured
+builtin::rag/knowledge_search name to the scoped local reference tool. They do not
+grant unrestricted file_search. Existing remote stores have not been reindexed.
+
+Native filter fields exist in the installed client schema, but current uploads do
+not preserve role attributes and provider enforcement is unverified. Local filtering
+avoids claiming isolation from that unverified path. Reintroduce native scoped retrieval
+only after per-file role attributes and a real cross-role retrieval test pass.
+
+The supervisor does not have a persistent memory-query tool. Chat's legacy preference
+storage is separate and unchanged; it is not injected into production agents.
+Archived knowledge in docs/archive/knowledge-2026-09-09 is outside active ingestion.

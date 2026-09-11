@@ -17,7 +17,7 @@ description: What this agent does
 model: meta-llama/Llama-3.2-3B-Instruct
 
 instructions: |
-  You are the [Role Name] for MyloWare.
+  You are the [Role Name] for AISMR.
 
   ## Your Job
   [Clear description of responsibilities]

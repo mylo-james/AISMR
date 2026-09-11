@@ -1,13 +1,14 @@
 {
-  "name": "remotion-service",
+  "name": "aismr-renderer",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx api/server.ts",
-    "build": "tsc --project tsconfig.json",
+    "build": "tsc --project tsconfig.json && node scripts/copy-render-assets.mjs",
     "start": "node dist/api/server.js",
-    "render": "node render.mjs"
+    "render": "node render.mjs",
+    "test:unit": "node --import tsx --test api/media.test.ts api/month-bank.test.ts api/scene-v2.test.ts api/narration-archive.test.ts scripts/frame-concurrency.test.mjs scripts/render-storage.test.mjs scripts/edit-plan.test.ts"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.382",

@@ -1,0 +1,11 @@
+{
+  "profile_version": "eleven-v3-whisper-en-v1",
+  "model": "fal-ai/elevenlabs/tts/eleven-v3",
+  "voice": "KmnvDXRA0HU55Q0aqkPG",
+  "stability": 0.5,
+  "language_code": "en",
+  "apply_text_normalization": "off",
+  "timestamps": true,
+  "delivery_prefix": "[whispers]",
+  "between_cues": "[long pause]"
+}

@@ -1,4 +1,4 @@
-"""SQLAlchemy database models for MyloWare."""
+"""SQLAlchemy database models for AISMR."""
 
 from __future__ import annotations
 
@@ -257,6 +257,7 @@ class Job(Base):
 
     available_at = Column(DateTime, default=_utc_now, nullable=False)
     claimed_by = Column(String(128), nullable=True)
+    claim_generation = Column(Integer, nullable=False, default=0)
     lease_expires_at = Column(DateTime, nullable=True)
 
     last_error = Column(Text, nullable=True)

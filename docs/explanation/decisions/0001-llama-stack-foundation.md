@@ -5,7 +5,7 @@
 
 ## Context
 
-MyloWare is an AI video production platform that needs:
+AISMR is an AI video production platform that needs:
 
 - Multi-agent orchestration with tool calling
 - RAG for domain knowledge (video editing, social media trends)

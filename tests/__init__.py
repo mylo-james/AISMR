@@ -1,1 +1,1 @@
-"""MyloWare test suite."""
+"""AISMR test suite."""

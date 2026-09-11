@@ -1,6 +1,6 @@
 # CLI Reference
 
-Command-line interface for MyloWare.
+Command-line interface for AISMR.
 
 ---
 
@@ -111,5 +111,5 @@ docker compose logs -f
 docker compose down
 
 # Rebuild after changes
-docker compose build myloware
+docker compose build aismr
 ```

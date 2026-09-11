@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "run_id": "48f33aa1-0011-44fb-ac7c-8164490beb46",
+  "revision": 1,
+  "item_id": "teacup",
+  "item_text": "Teacup",
+  "ideas": [
+    {
+      "month": "January",
+      "ordinal": 1,
+      "label": "Frozen Teacup",
+      "visual_prompt": "A vertical close shot reveals a recognizable teacup carved entirely from blue-white ice, resting in a miniature frozen orchard inside a snow globe. Without changing shape, the cup suddenly pulls loose snow upward through its hollow interior, forming a tiny inverted blizzard that climbs from saucer to rim. The camera gently pushes closer as the swirling snow settles above the cup, leaving a luminous upside-down winter landscape suspended inside.",
+      "spoken_text": "January. Frozen Teacup."
+    },
+    {
+      "month": "February",
+      "ordinal": 2,
+      "label": "Diamond Teacup",
+      "visual_prompt": "A low vertical frame opens on a recognizable teacup made entirely of clear diamond, embedded in a miniature cavern of black velvet rock. Its empty bowl begins pouring a narrow waterfall downward, yet the water passes through the diamond walls and reappears as a river flowing across the cave ceiling. The camera tilts upward with the stream, ending on the diamond cup holding a tiny upside-down valley inside.",
+      "spoken_text": "February. Diamond Teacup."
+    },
+    {
+      "month": "March",
+      "ordinal": 3,
+      "label": "Moss Teacup",
+      "visual_prompt": "A vertical macro shot opens on a recognizable teacup woven from living green moss, perched in a miniature foggy forest. The moss cup gently exhales a cloud of soil from its hollow interior, and the soil rises against gravity, assembling a tiny mountain range above the rim while roots remain visibly woven into the cup. The camera arcs slightly, finishing with miniature peaks growing upside down from the suspended earthy cloud.",
+      "spoken_text": "March. Moss Teacup."
+    },
+    {
+      "month": "April",
+      "ordinal": 4,
+      "label": "Mercury Teacup",
+      "visual_prompt": "A centered vertical shot reveals a recognizable teacup made of liquid mercury, holding its shape on a miniature moonlit salt flat. One impossible action begins: the mercury handle detaches as a continuous loop, swims around the cup like a small orbital ring, then snaps back into its original handle position without splashing. The camera makes a slow half-orbit, ending with a perfect metallic cup beneath a hovering silver halo.",
+      "spoken_text": "April. Mercury Teacup."
+    },
+    {
+      "month": "May",
+      "ordinal": 5,
+      "label": "Cloud Teacup",
+      "visual_prompt": "A vertical close-up opens on a recognizable teacup formed from dense white cloud, floating above a miniature village of paper-thin rooftops. The cup\u2019s hollow suddenly releases a flock of tiny cloud houses that fly upward, each still attached by vapor threads, then fold themselves back into the bowl. The camera rises with them, ending on the cloud teacup cradling a complete upside-down village within its soft translucent walls.",
+      "spoken_text": "May. Cloud Teacup."
+    },
+    {
+      "month": "June",
+      "ordinal": 6,
+      "label": "Coral Teacup",
+      "visual_prompt": "A vertical underwater frame opens on a recognizable teacup grown entirely from branching red coral, standing in a miniature ocean trench. The cup\u2019s interior begins drawing the surrounding seawater upward in a twisting column, carrying tiny fish-shaped bubbles into the bowl while the coral outline stays intact. The camera drifts forward through blue haze, ending with a calm suspended ocean contained inside the coral cup.",
+      "spoken_text": "June. Coral Teacup."
+    },
+    {
+      "month": "July",
+      "ordinal": 7,
+      "label": "Wax Teacup",
+      "visual_prompt": "A vertical medium close shot reveals a recognizable teacup made of warm amber wax on a miniature candlelit desert. Instead of melting, the cup\u2019s shadow liquefies and climbs upward, wrapping around the vessel as a second dark wax cup. The camera slowly circles one side, ending when the shadow-cup pours a black ribbon back into the original bowl, leaving the amber teacup solid and perfectly recognizable.",
+      "spoken_text": "July. Wax Teacup."
+    },
+    {
+      "month": "August",
+      "ordinal": 8,
+      "label": "Feather Teacup",
+      "visual_prompt": "A vertical macro shot opens on a recognizable teacup constructed from densely layered ivory feathers, balanced on a miniature airborne island. A single feather lifts from the rim and pulls the entire cup upward like a magnet, dragging the island beneath it into the sky while all feathers remain woven into the shape. The camera tilts down as the island dangles below, ending with the cup carrying its tiny world overhead.",
+      "spoken_text": "August. Feather Teacup."
+    },
+    {
+      "month": "September",
+      "ordinal": 9,
+      "label": "Amber Teacup",
+      "visual_prompt": "A vertical close frame opens on a recognizable teacup cast from translucent golden amber, half-buried in a miniature prehistoric fern valley. Inside its empty bowl, a tiny amber sun ignites and begins orbiting the rim, pulling the surrounding valley upward in a slow spiral of roots and stones. The camera pushes through the glowing haze, ending with the cup containing a complete miniature sunset and suspended landscape.",
+      "spoken_text": "September. Amber Teacup."
+    },
+    {
+      "month": "October",
+      "ordinal": 10,
+      "label": "Velvet Teacup",
+      "visual_prompt": "A vertical studio-like dream frame opens on a recognizable teacup sewn entirely from deep crimson velvet, sitting in a miniature theater made of folded black curtains. The cup\u2019s interior suddenly opens into a tunnel, and the surrounding curtains stream into it from every direction without moving the cup\u2019s outline. The camera advances toward the bowl, ending with the velvet teacup containing an impossibly deep theater whose curtains hang upward.",
+      "spoken_text": "October. Velvet Teacup."
+    },
+    {
+      "month": "November",
+      "ordinal": 11,
+      "label": "Salt Teacup",
+      "visual_prompt": "A vertical close shot reveals a recognizable teacup sculpted from white crystalline salt, standing in a miniature salt desert beneath a violet sky. The cup absorbs a nearby salt dune through its walls, then the dune erupts from the bowl as a towering spiral staircase that curls above the rim while the cup stays solid. The camera cranes upward, ending on the salt teacup supporting a staircase into the sky.",
+      "spoken_text": "November. Salt Teacup."
+    },
+    {
+      "month": "December",
+      "ordinal": 12,
+      "label": "Star Teacup",
+      "visual_prompt": "A vertical night shot opens on a recognizable teacup made entirely of densely packed golden stars, resting on a miniature floating observatory. One impossible action begins as the stars inside the empty bowl descend like rain, then arrange themselves into a tiny rotating galaxy beneath the rim while the cup remains fully shaped. The camera slowly pulls back, ending with the star teacup holding a whole luminous universe in its hollow.",
+      "spoken_text": "December. Star Teacup."
+    }
+  ]
+}

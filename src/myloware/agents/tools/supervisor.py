@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from typing import Any, Callable, Dict, Iterable
 from uuid import UUID
 
+from myloware.config.projects import list_projects, load_project
 from myloware.llama_clients import get_sync_client
 from myloware.observability.logging import get_logger
 from myloware.storage.database import get_session
@@ -25,6 +27,22 @@ def _run_repo_factory() -> RunRepository:
 def _artifact_repo_factory() -> ArtifactRepository:
     with get_session() as session:
         return ArtifactRepository(session)
+
+
+def _validate_workflow_project(project: object) -> Dict[str, Any] | None:
+    """Return a structured error unless a project is a configured local project."""
+    if not isinstance(project, str):
+        return format_tool_error("invalid_project", "Project must be a configured project name")
+    if not project or project in {".", ".."} or Path(project).name != project:
+        return format_tool_error("invalid_project", "Project must be a configured project name")
+
+    try:
+        if project not in list_projects():
+            return format_tool_error("invalid_project", "Project must be a configured project name")
+        load_project(project)
+    except (FileNotFoundError, ValueError, OSError):
+        return format_tool_error("invalid_project", "Project must be a configured project name")
+    return None
 
 
 class StartWorkflowTool(MylowareBaseTool):
@@ -83,6 +101,10 @@ class StartWorkflowTool(MylowareBaseTool):
         user_id: str | None = None,
         telegram_chat_id: str | None = None,
     ) -> Dict[str, Any]:
+        validation_error = _validate_workflow_project(project)
+        if validation_error:
+            return validation_error
+
         client = self.client_factory()
 
         orchestrator = self.orchestrator
@@ -391,9 +413,7 @@ class ApproveGateTool(MylowareBaseTool):
 
     def run_impl(
         self, run_id: str, gate: str, content_override: str | None = None
-    ) -> Dict[str, Any]:
-        client = self.client_factory()
-
+    ) -> dict[str, Any]:
         gate_approver = self.gate_approver
         if gate_approver is None:
             from myloware.workflows.hitl import approve_gate as _approve_gate
@@ -403,6 +423,14 @@ class ApproveGateTool(MylowareBaseTool):
         if self.run_repo_factory and self.artifact_repo_factory:
             run_repo = self.run_repo_factory()
             artifact_repo = self.artifact_repo_factory()
+            run = run_repo.get(UUID(run_id))
+            if run is not None and run.workflow_name == "monthly":
+                return {
+                    "run_id": str(run.id),
+                    "status": "pending_visitor_action",
+                    "current_step": "visitor_decision",
+                }
+            client = self.client_factory()
             result = gate_approver(
                 client=client,
                 run_id=UUID(run_id),
@@ -423,6 +451,14 @@ class ApproveGateTool(MylowareBaseTool):
         with get_session() as session:
             run_repo = RunRepository(session)
             artifact_repo = ArtifactRepository(session)
+            run = run_repo.get(UUID(run_id)) if hasattr(run_repo, "get") else None
+            if run is not None and run.workflow_name == "monthly":
+                return {
+                    "run_id": str(run.id),
+                    "status": "pending_visitor_action",
+                    "current_step": "visitor_decision",
+                }
+            client = self.client_factory()
             result = gate_approver(
                 client=client,
                 run_id=UUID(run_id),

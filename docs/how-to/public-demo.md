@@ -1,52 +1,13 @@
-# Public Demo UI (Firebase Hosting)
+# AISMR public and embedded demo
 
-This guide sets up the public demo UI hosted on Firebase and wired to the MyloWare API.
+The current studio is prepared for https://aismr.mjames.dev, with its frontend
+and visitor API on one browser origin. Its Vercel frame policy permits embedding
+at https://mjames.dev and https://www.mjames.dev.
 
-## Prereqs
-- Firebase project + Hosting enabled
-- MyloWare API running with public demo enabled
-- A public `WEBHOOK_BASE_URL` configured for real providers
+Use [AISMR deployment preparation](aismr-deployment.md). Keep live effects disabled
+and admissions paused until the selected host, credentials, spending allowance,
+public-use evidence and full visitor journey have been verified.
 
-## Configure MyloWare (API)
-Set the following environment variables on the API service:
-
-```bash
-PUBLIC_DEMO_ENABLED=true
-PUBLIC_DEMO_ALLOWED_WORKFLOWS=motivational
-PUBLIC_DEMO_TOKEN_TTL_HOURS=72
-PUBLIC_DEMO_RATE_LIMIT=10/minute
-PUBLIC_DEMO_CORS_ORIGINS=https://myloware.mjames.dev
-```
-
-Ensure the demo uses the motivational workflow only. The public endpoints are:
-- `POST /v1/public/demo/start`
-- `GET /v1/public/demo/runs/{public_token}`
-
-## Configure Remotion service
-Lock down Remotion output and callbacks:
-
-```bash
-REMOTION_API_SECRET=...            # required in prod
-REMOTION_OUTPUT_PUBLIC=false
-REMOTION_CALLBACK_ALLOWLIST=myloware.mjames.dev,api.myloware.mjames.dev
-REMOTION_RENDER_TIMEOUT_SECONDS=900
-REMOTION_CALLBACK_TIMEOUT_MS=5000
-```
-
-## Deploy the UI
-The demo UI is a static site under `web/demo/`.
-
-```bash
-firebase init hosting
-# choose existing project and set public dir to web/demo
-
-firebase deploy --only hosting
-```
-
-To point the UI at a different API base URL, edit:
-- `web/demo/index.html` → `data-api-base="https://api.myloware.mjames.dev"`
-
-## Verify
-1. Open `https://myloware.mjames.dev`
-2. Submit a brief
-3. Confirm status updates and published TikTok URL
+The legacy motivational demo endpoints are disabled in the AISMR deployment
+profile. The previous Firebase instructions are preserved in
+[historical reference](../archive/legacy-deployment/public-demo.md.txt).

@@ -11,7 +11,7 @@ import { Trend } from "k6/metrics";
 const BASE_URL = __ENV.BASE_URL || "http://localhost:8000";
 const API_KEY = __ENV.API_KEY || "dev-api-key";
 const WORKFLOW = __ENV.WORKFLOW || "aismr";
-const BRIEF = __ENV.BRIEF || "Perf sanity brief for MyloWare";
+const BRIEF = __ENV.BRIEF || "Perf sanity brief for AISMR";
 
 const startTrend = new Trend("runs_start_duration", true);
 const remotionTrend = new Trend("remotion_webhook_duration", true);

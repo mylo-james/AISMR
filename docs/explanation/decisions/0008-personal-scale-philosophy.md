@@ -5,7 +5,7 @@
 
 ## Context
 
-MyloWare is operated by a single maintainer. The workflow still has long-running steps (video generation, rendering, publishing) and external webhooks, so correctness and debuggability matter, but the infrastructure footprint should stay small.
+AISMR is operated by a single maintainer. The workflow still has long-running steps (video generation, rendering, publishing) and external webhooks, so correctness and debuggability matter, but the infrastructure footprint should stay small.
 
 ## Decision
 

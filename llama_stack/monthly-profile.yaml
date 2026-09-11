@@ -1,0 +1,90 @@
+# AISMR monthly runtime resources.
+#
+# This is a profile source for the existing Llama Stack 0.3 client family. It
+# does not itself prove that credentials, model capability, or the shield are
+# available. T31 must run the real capability checks before it is selected.
+version: 2
+image_name: myloware-monthly
+
+apis:
+  - agents
+  - inference
+  - safety
+  - vector_io
+  - files
+  - tool_runtime
+
+providers:
+  inference:
+    - provider_id: openai
+      provider_type: remote::openai
+      config:
+        api_key: ${env.OPENAI_API_KEY:=}
+
+  safety:
+    - provider_id: llama-guard
+      provider_type: inline::llama-guard
+      config:
+        excluded_categories: []
+
+  agents:
+    - provider_id: meta-reference
+      provider_type: inline::meta-reference
+      config:
+        persistence:
+          agent_state:
+            namespace: agents
+            backend: kv_default
+          responses:
+            table_name: responses
+            backend: sql_default
+
+  tool_runtime:
+    - provider_id: rag-runtime
+      provider_type: inline::rag-runtime
+
+  files:
+    - provider_id: meta-reference-files
+      provider_type: inline::localfs
+      config:
+        storage_dir: ${env.FILES_STORAGE_DIR:=/.llama/distributions/monthly/files}
+        metadata_store:
+          table_name: files_metadata
+          backend: sql_default
+
+storage:
+  backends:
+    kv_default:
+      type: kv_sqlite
+      db_path: ${env.SQLITE_STORE_DIR:=/.llama/distributions/monthly}/kvstore.db
+    sql_default:
+      type: sql_sqlite
+      db_path: ${env.SQLITE_STORE_DIR:=/.llama/distributions/monthly}/sql_store.db
+  stores:
+    metadata:
+      namespace: registry
+      backend: kv_default
+    inference:
+      table_name: inference_store
+      backend: sql_default
+    conversations:
+      table_name: openai_conversations
+      backend: sql_default
+
+models:
+  - model_id: openai/gpt-4o-mini
+    provider_id: openai
+
+registered_resources:
+  models: []
+  shields:
+    - shield_id: content_safety
+      provider_id: llama-guard
+  vector_dbs: []
+  datasets: []
+  scoring_fns: []
+  benchmarks: []
+  tool_groups: []
+
+server:
+  port: 5001

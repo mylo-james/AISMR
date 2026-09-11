@@ -1,1 +1,1 @@
-"""Integration tests for MyloWare."""
+"""Integration tests for AISMR."""

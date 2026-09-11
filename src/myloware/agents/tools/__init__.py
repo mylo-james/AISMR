@@ -1,4 +1,4 @@
-"""Custom tools for MyloWare agents.
+"""Custom tools for AISMR agents.
 
 Supervisor tools are defined here.
 Video production tools (Sora, Remotion, UploadPost) are in src/tools/.

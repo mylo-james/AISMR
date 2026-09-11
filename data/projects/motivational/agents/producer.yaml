@@ -52,5 +52,5 @@ instructions: |
 
 tools:
   - sora_generate
-  - builtin::rag/knowledge_search
+  - role_knowledge_search
 

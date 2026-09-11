@@ -1,13 +1,14 @@
 """Application settings using Pydantic."""
 
+import json
 import os
 import tempfile
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import Field, field_validator, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -80,7 +81,7 @@ class Settings(BaseSettings):
         default=False,
         description="Enable unauthenticated public demo endpoints (motivational workflow only).",
     )
-    public_demo_allowed_workflows: list[str] = Field(
+    public_demo_allowed_workflows: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: ["motivational"],
         description="Allowlisted workflows for public demo endpoints.",
     )
@@ -92,8 +93,8 @@ class Settings(BaseSettings):
         default="10/minute",
         description="Rate limit for public demo start endpoint.",
     )
-    public_demo_cors_origins: list[str] = Field(
-        default_factory=lambda: ["https://myloware.mjames.dev"],
+    public_demo_cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["https://aismr.mjames.dev"],
         description="CORS allowlist for the public demo UI.",
     )
 
@@ -186,7 +187,7 @@ class Settings(BaseSettings):
     # Webhooks
     webhook_base_url: str = Field(
         default="",
-        description="Base URL for webhook callbacks (e.g., https://myloware.fly.dev)",
+        description="Base URL for webhook callbacks (e.g., https://aismr.mjames.dev)",
     )
     # Sora behavior / provider toggles
     sora_provider: Literal["real", "fake", "off"] = Field(
@@ -200,7 +201,7 @@ class Settings(BaseSettings):
         default="fake_clips/sora",
         description="Directory of MP4 fixtures used when SORA_PROVIDER=fake.",
     )
-    sora_fake_clip_paths: list[str] = Field(
+    sora_fake_clip_paths: Annotated[list[str], NoDecode] = Field(
         default_factory=list,
         description=(
             "Optional explicit MP4 paths for fake Sora provider. " "Env var can be comma-separated."
@@ -213,6 +214,8 @@ class Settings(BaseSettings):
         if v is None or v == "":
             return []
         if isinstance(v, str):
+            if v.lstrip().startswith("["):
+                return json.loads(v)
             return [p.strip() for p in v.split(",") if p.strip()]
         return list(v)
 
@@ -222,6 +225,8 @@ class Settings(BaseSettings):
         if v is None or v == "":
             return []
         if isinstance(v, str):
+            if v.lstrip().startswith("["):
+                return json.loads(v)
             return [p.strip() for p in v.split(",") if p.strip()]
         return list(v)
 
@@ -491,7 +496,7 @@ class Settings(BaseSettings):
         ):
             raise ValueError(
                 "WEBHOOK_BASE_URL is required when SORA_PROVIDER=real or REMOTION_PROVIDER=real. "
-                "Set it to your public API URL (e.g., https://myloware.fly.dev)"
+                "Set it to your public API URL (e.g., https://aismr.mjames.dev)"
             )
         return self
 

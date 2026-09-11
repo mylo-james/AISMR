@@ -5,8 +5,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from myloware.agents.factory import (
-    create_persona_agent,
     create_file_search_tool_config,
+    create_persona_agent,
     create_rag_tool_config,
 )
 
@@ -218,7 +218,9 @@ def test_create_agent_builds_tools_and_custom_tools(monkeypatch):
     monkeypatch.setattr(factory, "_build_tools_from_config", lambda *_a, **_k: ["tool1"])
 
     with patch("myloware.agents.factory.Agent") as mock_agent_class:
-        factory.create_agent(Mock(), "aismr", "ideator", vector_db_id="kb", custom_tools=["tool2"])
+        factory.create_agent(
+            Mock(), "aismr", "test_persona", vector_db_id="kb", custom_tools=["tool2"]
+        )
         call_kwargs = mock_agent_class.call_args.kwargs
         assert call_kwargs["tools"] == ["tool1", "tool2"]
 
@@ -254,12 +256,21 @@ def test_create_tool_instance_custom_tools(monkeypatch):
     from myloware.agents import factory
 
     sentinel = object()
+    remotion_calls = []
     monkeypatch.setattr(factory, "SoraGenerationTool", lambda run_id=None: sentinel)
-    monkeypatch.setattr(factory, "RemotionRenderTool", lambda run_id=None: sentinel)
+    monkeypatch.setattr(
+        factory,
+        "RemotionRenderTool",
+        lambda run_id=None, project=None: remotion_calls.append((run_id, project)) or sentinel,
+    )
     monkeypatch.setattr(factory, "UploadPostTool", lambda run_id=None: sentinel)
     monkeypatch.setattr(factory, "AnalyzeMediaTool", lambda run_id=None: sentinel)
 
     assert factory._create_tool_instance("sora_generate", Mock(), None, run_id="r") is sentinel
-    assert factory._create_tool_instance("remotion_render", Mock(), None, run_id="r") is sentinel
+    assert (
+        factory._create_tool_instance("remotion_render", Mock(), None, run_id="r", project="aismr")
+        is sentinel
+    )
+    assert remotion_calls == [("r", "aismr")]
     assert factory._create_tool_instance("upload_post", Mock(), None, run_id="r") is sentinel
     assert factory._create_tool_instance("analyze_media", Mock(), None, run_id="r") is sentinel

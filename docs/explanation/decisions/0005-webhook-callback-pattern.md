@@ -19,13 +19,13 @@ For OpenAI Sora this uses **Standard Webhooks** configured in the dashboard (no 
 
 Flow:
 ```
-[MyloWare] → POST job to Sora (no callback_url)
+[AISMR] → POST job to Sora (no callback_url)
                     ↓
 [Sora] processes video (1-3 min)
                     ↓
 [OpenAI] → POST Standard Webhook (video.completed/video.failed)
                     ↓
-[MyloWare] → Updates run, continues workflow
+[AISMR] → Updates run, continues workflow
 ```
 
 Webhook URL format (Sora, Standard Webhooks):

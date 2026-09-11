@@ -1,0 +1,22 @@
+version: 1
+items:
+  - id: swimming_pool
+    label: Swimming pool
+  - id: chair
+    label: Chair
+  - id: bed
+    label: Bed
+  - id: cake
+    label: Cake
+  - id: teacup
+    label: Teacup
+  - id: lamp
+    label: Lamp
+  - id: snow_globe
+    label: Snow globe
+  - id: watermelon
+    label: Watermelon
+  - id: pumpkin
+    label: Pumpkin
+  - id: rain_boot
+    label: Rain boot

@@ -1,6 +1,6 @@
 # Safety Model
 
-How MyloWare handles content moderation.
+How AISMR handles content moderation.
 
 ---
 

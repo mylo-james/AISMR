@@ -5,7 +5,7 @@
 
 ## Context
 
-MyloWare has multiple observability needs:
+AISMR has multiple observability needs:
 
 1. **LLM tracing** — What did the agent say? How long did inference take?
 2. **Request tracing** — Follow a request through the system

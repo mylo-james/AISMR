@@ -1,22 +1,24 @@
 [project]
-name = "myloware"
+name = "aismr"
 version = "0.1.0"
-description = "Llama Stack multi-agent video production platform"
+description = "AISMR: a LangGraph workflow for reviewed surreal video creation"
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 authors = [
-    {name = "MyloWare Team"}
+    {name = "AISMR Team"}
 ]
 keywords = ["llama-stack", "multi-agent", "video-production", "ai"]
 
 dependencies = [
     # Llama Stack - REQUIRED
-    "llama-stack-client>=0.3.4",
+    "llama-stack-client>=0.3.4,<0.4.0",
 
     # LangGraph - Workflow orchestration
     "langgraph>=0.2.0",
     "langgraph-checkpoint-postgres>=2.0.0",
+    "langgraph-checkpoint-sqlite==3.1.1",
+    "fal-client==1.0.1",
 
     # Web framework
     "fastapi>=0.109.0",
@@ -24,13 +26,13 @@ dependencies = [
 
     # Database
     "sqlalchemy[asyncio]>=2.0.0",
-    "alembic>=1.13.0",
+    "alembic>=1.14.0",
     "psycopg2-binary>=2.9.0",
     "asyncpg>=0.29.0",  # Async PostgreSQL driver for async routes
 
     # Configuration
     "pydantic>=2.6.0",
-    "pydantic-settings>=2.1.0",
+    "pydantic-settings>=2.7.0",
     "PyYAML>=6.0.0",
 
     # Async runtime
@@ -79,8 +81,15 @@ dev = [
 s3 = [
     "boto3>=1.34.0",
 ]
+hosted = [
+    "boto3>=1.34.0",
+    "psycopg[binary]>=3.3.5",
+    "vercel-queue==0.8.1",
+]
 
 [project.scripts]
+aismr = "myloware.cli.main:cli"
+# Preserve the installed command used by existing private service definitions.
 myloware = "myloware.cli.main:cli"
 
 [build-system]
@@ -98,6 +107,11 @@ include = ["myloware*"]
 target-version = "py313"
 line-length = 100
 extend-exclude = ["archive"]
+
+[tool.ruff.lint]
+# Preserve the Ruff 0.14 pre-commit contract explicitly. Ruff 0.16 expanded
+# its defaults; new rule families should be adopted as reviewed changes.
+select = ["E4", "E7", "E9", "F"]
 
 [tool.black]
 target-version = ["py313"]
@@ -159,3 +173,12 @@ check_untyped_defs = true
 [tool.bandit]
 exclude_dirs = ["tests", "alembic"]
 skips = ["B101"]  # Allow assert statements
+
+[[tool.vercel.subscribers]]
+entrypoint = "queue_worker"
+
+[dependency-groups]
+deployment = ["boto3>=1.34.0", "psycopg[binary]>=3.3.5", "vercel-queue==0.8.1"]
+
+[tool.uv]
+default-groups = ["deployment"]

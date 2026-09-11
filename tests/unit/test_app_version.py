@@ -8,7 +8,7 @@ from importlib.metadata import PackageNotFoundError
 def test_get_app_version_uses_dist_metadata() -> None:
     from myloware.app_version import get_app_version
 
-    version = get_app_version("myloware")
+    version = get_app_version("aismr")
     assert isinstance(version, str)
     assert version
 

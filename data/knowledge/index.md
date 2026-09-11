@@ -1,90 +1,32 @@
-# MyloWare Knowledge Base
+# Workflow agent knowledge
 
-Single source of truth for AI agent expertise. Each topic is covered in exactly one place.
+Reviewed 2026-09-10. Active references are deliberately small and role-scoped.
 
----
+| Role | References |
+| --- | --- |
+| Ideator | ideation/concept-planning.md and the selected project's ideator references |
+| Producer | production/asset-contract.md |
+| Editor | editing/scene-rendering.md |
+| Publisher | publishing/publish-to-tiktok.md |
+| Supervisor | workflow/orchestration.md |
 
-## Knowledge Structure
+Every operational Markdown document declares YAML front matter with roles,
+status: active and reviewed date. The local role_knowledge_search tool receives
+its project and role from the factory, filters documents before searching, and
+returns bounded text with source metadata. Untagged or inactive documents are
+not returned. A project agent cannot request another role or a different project.
 
-```
-data/knowledge/
-+-- asmr/                    # ASMR-specific content
-|   +-- asmr-niche-guide.md
-+-- composition/             # Visual framing
-|   +-- vertical-video-framing.md
-+-- editing/                 # Post-production
-|   +-- text-overlay-guide.md
-|   +-- transitions-guide.md
-+-- ideation/                # Creative generation
-|   +-- unique-object-generation.md
-+-- platform/                # TikTok specifics
-|   +-- community-guidelines.md
-|   +-- tiktok-algorithm.md
-|   +-- tiktok-specs.md
-+-- production/              # Pre-production
-|   +-- shot-types-reference.md
-|   +-- video-scripting-guide.md
-+-- psychology/              # Audience behavior
-|   +-- engagement-psychology.md
-+-- publishing/              # Distribution
-|   +-- caption-writing.md
-|   +-- hashtag-guide.md
-+-- storytelling/            # Narrative craft
-|   +-- hooks-and-retention.md
-|   +-- viral-hooks.md
-+-- video-generation/        # AI video (Veo3)
-|   +-- veo3-pitfalls.md
-|   +-- veo3-prompting-guide.md
-+-- workflow/                # Agent coordination
-|   +-- process-overview.md
-+-- comedic-timing.md        # Humor/timing theory
-+-- remotion-api-docs.md     # Remotion framework
-+-- remotion-vertical-video-guide.md
-```
+This is a deterministic local reference lookup, not a semantic vector search
+or a persistent episodic-memory system. The old native vector-store setup,
+maintenance and evaluation APIs remain available. Existing remote stores have
+not been erased or reindexed; role agents do not read those stale shared stores.
 
----
+Old references are preserved in docs/archive/knowledge-2026-09-09 and are outside
+the ingested data/knowledge directories. They contain historical, unverified and
+superseded advice and are not operational instructions.
 
-## Agent -> Knowledge Mapping
-
-| Agent | Primary Knowledge |
-|-------|-------------------|
-| **Ideator** | unique-object-generation, tiktok-algorithm, viral-hooks, engagement-psychology |
-| **Producer** | veo3-prompting-guide, shot-types-reference, video-scripting-guide, vertical-video-framing |
-| **Editor** | remotion-api-docs, remotion-vertical-video-guide, transitions-guide, text-overlay-guide |
-| **Publisher** | caption-writing, hashtag-guide, tiktok-specs, community-guidelines |
-
----
-
-## Knowledge Principles
-
-### Single Source of Truth
-Each topic exists in **one document only**. If you need to update a topic, update that one file.
-
-### No Overlap
-Documents don't repeat each other's content. Cross-reference instead.
-
-### Focused Scope
-Each doc covers one topic deeply rather than many topics shallowly.
-
-### Retrieval-Optimized
-- Clear H1/H2 headings for section retrieval
-- Structured tables for quick reference
-- Actionable examples, not just theory
-
----
-
-## Project-Specific Knowledge
-
-Project knowledge goes in `data/projects/{project_id}/knowledge/`, not here.
-
-| Location | Content | Example |
-|----------|---------|---------|
-| Global KB (here) | Universal best practices | veo3-prompting-guide.md |
-| Project KB | Project-specific context | zodiac-signs.md for AISMR |
-| Agent YAML | Per-task instructions | system_prompt in agent config |
-
----
-
-## Last Updated
-
-2024-12-06
+Current code has separate legacy role-tool and deterministic scene-studio branches.
+Active guidance names the owning branch and preserves scene-only media handoff.
+Historical provider settings and calendar-shaped recipes remain legacy and are not
+returned by role knowledge search. Refresh provider parameters and policies before
+enabling a new adapter, and distinguish tested output from prompting hypotheses.

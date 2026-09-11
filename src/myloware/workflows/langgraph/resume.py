@@ -21,12 +21,23 @@ from myloware.storage.models import RunStatus
 from myloware.storage.repositories import ArtifactRepository, RunRepository
 from myloware.workflows.langgraph.graph import ensure_checkpointer_initialized, get_graph
 from myloware.workflows.langgraph.utils import select_latest_video_clip_urls
+from myloware.workflows.admission import StudioAdmissionRequiredError
 
 logger = get_logger(__name__)
 
 
 class ResumeRetryableError(RuntimeError):
     """Transient resume error that should be retried by background workers."""
+
+
+async def _require_legacy_monthly_resume_allowed(run_id: UUID) -> None:
+    """Reject legacy graph resumes for monthly rows before graph activity."""
+    SessionLocal = get_async_session_factory()
+    async with SessionLocal() as session:
+        run = await RunRepository(session).get_async(run_id)
+    from myloware.workflows.admission import require_legacy_monthly_engine_allowed
+
+    require_legacy_monthly_engine_allowed(run.workflow_name if run else None)
 
 
 async def resume_after_videos(
@@ -39,6 +50,7 @@ async def resume_after_videos(
     logger.info("Resuming LangGraph workflow after videos: %s", run_id)
 
     try:
+        await _require_legacy_monthly_resume_allowed(run_id)
         if not settings.database_url.startswith("sqlite"):
             await ensure_checkpointer_initialized()
 
@@ -111,6 +123,10 @@ async def resume_after_videos(
         )
         logger.info("LangGraph workflow resumed after videos: %s", run_id)
 
+    except StudioAdmissionRequiredError:
+        # Monthly visitor runs are owned by StudioStore. Do not mutate them from
+        # this legacy recovery path after rejecting graph entry.
+        raise
     except ResumeRetryableError as exc:
         logger.warning("Resume retryable: %s", exc)
         if raise_on_error or settings.workflow_dispatcher == "db":
@@ -142,6 +158,7 @@ async def resume_after_render(
         raise ValueError("video_url is required to resume after render")
 
     try:
+        await _require_legacy_monthly_resume_allowed(run_id)
         if not settings.database_url.startswith("sqlite"):
             await ensure_checkpointer_initialized()
 
@@ -201,6 +218,10 @@ async def resume_after_render(
         )
         logger.info("LangGraph workflow resumed after render: %s", run_id)
 
+    except StudioAdmissionRequiredError:
+        # Monthly visitor runs are owned by StudioStore. Do not mutate them from
+        # this legacy recovery path after rejecting graph entry.
+        raise
     except ResumeRetryableError as exc:
         logger.warning("Resume retryable: %s", exc)
         if raise_on_error or settings.workflow_dispatcher == "db":

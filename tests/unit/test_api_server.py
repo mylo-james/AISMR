@@ -128,6 +128,7 @@ async def test_lifespan_real_provider_reuses_store(monkeypatch) -> None:
         "load_documents_with_manifest",
         lambda *_args, **_kwargs: ([], {"hash": "h1", "files": []}),
     )
+    monkeypatch.setattr(server, "save_manifest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(server, "save_manifest", lambda _m: None)
     monkeypatch.setattr(server, "get_existing_vector_store", lambda *_a, **_k: "vs-1")
     monkeypatch.setattr(server, "setup_project_knowledge", lambda *_a, **_k: "vs-2")
@@ -310,6 +311,7 @@ async def test_lifespan_rag_toolgroup_registration_failure_raises(monkeypatch) -
         "load_documents_with_manifest",
         lambda *_args, **_kwargs: ([], {"hash": "h1", "files": []}),
     )
+    monkeypatch.setattr(server, "save_manifest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(server, "get_existing_vector_store", lambda *_a, **_k: None)
     monkeypatch.setattr(server, "setup_project_knowledge", lambda *_a, **_k: "vs-1")
     monkeypatch.setattr("myloware.observability.init_observability", lambda: None)
@@ -348,6 +350,7 @@ async def test_lifespan_shields_missing_sets_flag(monkeypatch) -> None:
         "load_documents_with_manifest",
         lambda *_args, **_kwargs: ([], {"hash": "h1", "files": []}),
     )
+    monkeypatch.setattr(server, "save_manifest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(server, "get_existing_vector_store", lambda *_a, **_k: None)
     monkeypatch.setattr(server, "setup_project_knowledge", lambda *_a, **_k: "vs-1")
     monkeypatch.setattr("myloware.observability.init_observability", lambda: None)
@@ -496,6 +499,7 @@ async def test_lifespan_websearch_registration_failure(monkeypatch) -> None:
         "load_documents_with_manifest",
         lambda *_args, **_kwargs: ([], {"hash": "h1", "files": []}),
     )
+    monkeypatch.setattr(server, "save_manifest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(server, "get_existing_vector_store", lambda *_a, **_k: None)
     monkeypatch.setattr(server, "setup_project_knowledge", lambda *_a, **_k: "vs-1")
     monkeypatch.setattr("myloware.observability.init_observability", lambda: None)
@@ -532,6 +536,7 @@ async def test_lifespan_shields_check_failure(monkeypatch) -> None:
         "load_documents_with_manifest",
         lambda *_args, **_kwargs: ([], {"hash": "h1", "files": []}),
     )
+    monkeypatch.setattr(server, "save_manifest", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(server, "get_existing_vector_store", lambda *_a, **_k: None)
     monkeypatch.setattr(server, "setup_project_knowledge", lambda *_a, **_k: "vs-1")
     monkeypatch.setattr("myloware.observability.init_observability", lambda: None)

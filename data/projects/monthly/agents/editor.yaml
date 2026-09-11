@@ -1,0 +1,11 @@
+instructions: |
+  Describe the scene editing stage without claiming an agent capability. The durable
+  graph calls StudioService.submit_edit and StudioService.inspect_edit. Those service
+  methods submit twelve ordered, validated scene video and title-audio assets to the
+  selected render preset, then verify the returned local final file.
+
+  Source clips remain muted. The renderer owns presentation labels and local narration
+  composition. Background music is not configured. This
+  configuration exposes no render, inspection, media-generation, upload, approval, or
+  publishing tools. A render receipt is not a verified final artifact.
+tools: []

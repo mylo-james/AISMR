@@ -17,6 +17,7 @@ from myloware.storage.repositories import (
     FeedbackRepository,
     JobRepository,
     RunRepository,
+    StaleJobClaim,
 )
 
 
@@ -389,11 +390,16 @@ async def test_job_repository_lifecycle(async_session):
     claimed = await repo.claim_next_async(worker_id="worker-1", lease_seconds=5)
     assert claimed is not None
     assert claimed.status == JobStatus.RUNNING.value
+    assert claimed.claim_generation == 1
 
-    await repo.touch_lease_async(claimed.id, worker_id="worker-1", lease_seconds=5)
+    assert await repo.touch_lease_async(
+        claimed.id, worker_id="worker-1", claim_generation=claimed.claim_generation, lease_seconds=5
+    )
     await async_session.commit()
 
-    await repo.mark_succeeded_async(claimed.id)
+    assert await repo.mark_succeeded_async(
+        claimed.id, worker_id="worker-1", claim_generation=claimed.claim_generation
+    )
     await async_session.commit()
     refreshed = await async_session.get(Job, claimed.id)
     assert refreshed.status == JobStatus.SUCCEEDED.value
@@ -410,17 +416,88 @@ async def test_job_repository_failed_and_reschedule(async_session):
     )
     await async_session.commit()
 
-    job.attempts = 1
-    await async_session.commit()
-    status = await repo.mark_failed_async(job.id, error="boom", retry_delay_seconds=1)
+    claimed = await repo.claim_next_async(worker_id="worker-1")
+    assert claimed is not None
+    status = await repo.mark_failed_async(
+        claimed.id,
+        worker_id="worker-1",
+        claim_generation=claimed.claim_generation,
+        error="boom",
+        retry_delay_seconds=1,
+    )
     await async_session.commit()
     assert status == JobStatus.PENDING
 
-    job.attempts = 2
+    await async_session.refresh(job)
+    job.available_at = repo._utc_now_naive()
     await async_session.commit()
-    status = await repo.mark_failed_async(job.id, error="boom-again")
+    claimed = await repo.claim_next_async(worker_id="worker-2")
+    assert claimed is not None
+    status = await repo.mark_failed_async(
+        claimed.id,
+        worker_id="worker-2",
+        claim_generation=claimed.claim_generation,
+        error="boom-again",
+    )
     await async_session.commit()
     assert status == JobStatus.FAILED
+
+
+@pytest.mark.asyncio
+async def test_job_claim_generation_fences_stale_same_worker_id(tmp_path) -> None:
+    """A reclaimed lease cannot be mutated by an older process using the same ID."""
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'claims.db'}")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    Session = async_sessionmaker(engine, expire_on_commit=False)
+
+    async with Session() as session:
+        repo = JobRepository(session)
+        job = await repo.enqueue_async("fenced", idempotency_key="fenced-1", max_attempts=3)
+        await session.commit()
+        first = await repo.claim_next_async(worker_id="same-worker", lease_seconds=60)
+        assert first is not None
+        assert first.claim_generation == 1
+        job_id = job.id
+        await session.commit()
+
+    async with Session() as session:
+        repo = JobRepository(session)
+        current = await session.get(Job, job_id)
+        assert current is not None
+        current.lease_expires_at = repo._utc_now_naive() - timedelta(seconds=1)
+        await session.commit()
+        second = await repo.claim_next_async(worker_id="same-worker", lease_seconds=60)
+        assert second is not None
+        assert second.claim_generation == 2
+        await session.commit()
+
+    async with Session() as session:
+        repo = JobRepository(session)
+        with pytest.raises(StaleJobClaim):
+            await repo.touch_lease_async(
+                job_id, worker_id="same-worker", claim_generation=first.claim_generation
+            )
+        with pytest.raises(StaleJobClaim):
+            await repo.mark_succeeded_async(
+                job_id, worker_id="same-worker", claim_generation=first.claim_generation
+            )
+        with pytest.raises(StaleJobClaim):
+            await repo.mark_failed_async(
+                job_id,
+                worker_id="same-worker",
+                claim_generation=first.claim_generation,
+                error="old process failed",
+            )
+        await session.rollback()
+
+    async with Session() as session:
+        current = await session.get(Job, job_id)
+        assert current is not None
+        assert current.status == JobStatus.RUNNING.value
+        assert current.claimed_by == "same-worker"
+        assert current.claim_generation == 2
+    await engine.dispose()
 
 
 @pytest.mark.asyncio
@@ -529,8 +606,10 @@ async def test_job_repository_type_errors(db_session):
     with pytest.raises(TypeError):
         await repo.claim_next_async(worker_id="w")
     with pytest.raises(TypeError):
-        await repo.touch_lease_async(uuid.uuid4(), worker_id="w")
+        await repo.touch_lease_async(uuid.uuid4(), worker_id="w", claim_generation=1)
     with pytest.raises(TypeError):
-        await repo.mark_succeeded_async(uuid.uuid4())
+        await repo.get_current_claim_async(uuid.uuid4(), worker_id="w", claim_generation=1)
     with pytest.raises(TypeError):
-        await repo.mark_failed_async(uuid.uuid4(), error="err")
+        await repo.mark_succeeded_async(uuid.uuid4(), worker_id="w", claim_generation=1)
+    with pytest.raises(TypeError):
+        await repo.mark_failed_async(uuid.uuid4(), worker_id="w", claim_generation=1, error="err")

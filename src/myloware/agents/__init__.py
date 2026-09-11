@@ -1,4 +1,4 @@
-"""MyloWare agents module - Llama Stack persona agents.
+"""AISMR agents module - Llama Stack persona agents.
 
 In 0.3.x, the Agent class has changed:
 - NO built-in input_shields/output_shields (use safety module)

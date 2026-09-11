@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from uuid import UUID
+from pathlib import Path
 from typing import Any, Mapping
+from uuid import UUID
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.constants import END, START
 from langgraph.graph import StateGraph
 from langgraph.types import RunnableConfig
@@ -43,18 +45,72 @@ class LangGraphEngine:
 
     def __init__(self) -> None:
         self._graph: Any | None = None
-        self._graph_kind: str | None = None  # "sqlite" | "postgres"
-        self._async_checkpointer: AsyncPostgresSaver | None = None
+        self._monthly_graph: Any | None = None
+        self._graph_kind: str | None = None  # "memory" | "sqlite" | "postgres"
+        self._async_checkpointer: AsyncPostgresSaver | AsyncSqliteSaver | None = None
         self._async_checkpointer_ctx: Any = None  # Context manager for checkpointer
-        self._async_checkpointer_dsn: str | None = None
+        self._async_checkpointer_target: str | None = None
+        self._async_checkpointer_loop: asyncio.AbstractEventLoop | None = None
 
-    async def _enter_async_checkpointer(self) -> AsyncPostgresSaver:
+    @staticmethod
+    def _is_memory_sqlite_url(db_url: str) -> bool:
+        return db_url.startswith("sqlite") and ":memory:" in db_url
+
+    @classmethod
+    def _checkpointer_kind_for_url(cls, db_url: str) -> str:
+        if not db_url.startswith("sqlite"):
+            return "postgres"
+        return "memory" if cls._is_memory_sqlite_url(db_url) else "sqlite"
+
+    @staticmethod
+    def _sqlite_checkpoint_path(db_url: str) -> Path:
+        if not db_url.startswith("sqlite") or ":memory:" in db_url:
+            raise RuntimeError("A file-backed SQLite URL is required for durable checkpoints.")
+        database = db_url.split(":///", 1)[-1]
+        if not database or database == db_url or database.startswith("file:"):
+            raise RuntimeError("SQLite checkpoint URL must name a local file.")
+        path = Path(database).expanduser()
+        if not path.is_absolute():
+            path = (Path.cwd() / path).resolve()
+        return path.with_name(f"{path.stem}.langgraph-checkpoints.sqlite3")
+
+    async def _close_async_checkpointer(self) -> None:
+        if self._async_checkpointer_ctx is not None:
+            await self._async_checkpointer_ctx.__aexit__(None, None, None)
+        self._async_checkpointer = None
+        self._async_checkpointer_ctx = None
+        self._async_checkpointer_target = None
+        self._async_checkpointer_loop = None
+
+    async def _enter_async_checkpointer(self) -> AsyncPostgresSaver | AsyncSqliteSaver:
         """Enter AsyncPostgresSaver context manager (idempotent)."""
         db_url = settings.database_url
-        if db_url.startswith("sqlite"):
-            raise RuntimeError(
-                "LangGraph checkpoints require Postgres; configure DATABASE_URL with psycopg driver."
-            )
+        kind = self._checkpointer_kind_for_url(db_url)
+        if kind == "memory":
+            raise RuntimeError("In-memory SQLite does not provide durable checkpoints.")
+        if kind == "sqlite":
+            target = str(self._sqlite_checkpoint_path(db_url))
+            current_loop = asyncio.get_running_loop()
+            if self._async_checkpointer is not None:
+                if self._async_checkpointer_target != target:
+                    raise RuntimeError(
+                        "Checkpoint database target changed while active. Call await engine.shutdown() first."
+                    )
+                if self._async_checkpointer_loop is current_loop:
+                    return self._async_checkpointer
+                await self._close_async_checkpointer()
+            Path(target).parent.mkdir(parents=True, exist_ok=True)
+            self._async_checkpointer_ctx = AsyncSqliteSaver.from_conn_string(target)
+            self._async_checkpointer = await self._async_checkpointer_ctx.__aenter__()
+            self._async_checkpointer_target = target
+            self._async_checkpointer_loop = current_loop
+            try:
+                await asyncio.wait_for(self._async_checkpointer.setup(), timeout=10.0)
+            except Exception:
+                await self._close_async_checkpointer()
+                raise
+            logger.info("LangGraph SQLite checkpointer initialized")
+            return self._async_checkpointer
         if db_url.startswith("postgresql+psycopg2://"):
             db_url = db_url.replace("postgresql+psycopg2://", "postgresql://")
         elif db_url.startswith("postgresql+asyncpg://"):
@@ -64,15 +120,16 @@ class LangGraphEngine:
 
         # If existing saver is bound to a different loop or connection closed, re-open
         if self._async_checkpointer is not None:
+            if self._async_checkpointer_target not in (None, db_url):
+                raise RuntimeError(
+                    "Checkpoint database target changed while active. Call await engine.shutdown() first."
+                )
             try:
                 same_loop = getattr(self._async_checkpointer, "loop", None) is current_loop
                 conn_ok = hasattr(self._async_checkpointer, "conn") and not getattr(
                     self._async_checkpointer.conn, "closed", True
                 )
-                dsn_ok = (
-                    self._async_checkpointer_dsn == db_url if self._async_checkpointer_dsn else True
-                )
-                if same_loop and conn_ok and dsn_ok:
+                if same_loop and conn_ok:
                     return self._async_checkpointer
             except Exception as exc:
                 logger.debug(
@@ -93,9 +150,10 @@ class LangGraphEngine:
             self._async_checkpointer = None
             self._async_checkpointer_ctx = None
 
-        self._async_checkpointer_dsn = db_url
         self._async_checkpointer_ctx = AsyncPostgresSaver.from_conn_string(db_url)
         self._async_checkpointer = await self._async_checkpointer_ctx.__aenter__()
+        self._async_checkpointer_target = db_url
+        self._async_checkpointer_loop = current_loop
 
         # Ensure tables exist (setup is required for this version)
         try:
@@ -108,63 +166,81 @@ class LangGraphEngine:
 
         return self._async_checkpointer
 
-    def _get_async_checkpointer(self) -> AsyncPostgresSaver:
+    def _get_async_checkpointer(self) -> AsyncPostgresSaver | AsyncSqliteSaver:
         """Get AsyncPostgresSaver checkpointer for LangGraph async execution."""
         if self._async_checkpointer is None:
             raise RuntimeError(
-                "AsyncPostgresSaver not initialized. "
+                "Durable LangGraph checkpointer not initialized. "
                 "Call await ensure_checkpointer_initialized() during app startup."
             )
         return self._async_checkpointer
 
     async def ensure_checkpointer_initialized(self) -> None:
         """Idempotently initialize AsyncPostgresSaver and reset graph cache only if needed."""
-        if settings.database_url.startswith("sqlite"):
+        if self._checkpointer_kind_for_url(settings.database_url) == "memory":
+            if self._async_checkpointer is not None:
+                raise RuntimeError(
+                    "Call await engine.shutdown() before changing to in-memory SQLite."
+                )
             return
         previous = self._async_checkpointer
         await self._enter_async_checkpointer()
         if self._async_checkpointer is not previous:
             self._graph = None
+            self._monthly_graph = None
 
     async def shutdown(self) -> None:
         """Close AsyncPostgresSaver context manager (call from app shutdown)."""
-        if self._async_checkpointer_ctx and self._async_checkpointer:
-            try:
-                await self._async_checkpointer_ctx.__aexit__(None, None, None)
-            except Exception as exc:
-                logger.warning("Error closing async checkpointer: %s", exc)
-        self._async_checkpointer = None
-        self._async_checkpointer_ctx = None
-        self._async_checkpointer_dsn = None
+        await self._close_async_checkpointer()
         self._graph = None
+        self._monthly_graph = None
         self._graph_kind = None
 
     def clear_graph_cache(self) -> None:
         """Clear the graph cache (useful for testing)."""
         self._graph = None
+        self._monthly_graph = None
         self._graph_kind = None
 
     def get_graph(self) -> Any:
         """Get compiled graph for current settings (cached)."""
         db_url = settings.database_url
-        desired_kind = "sqlite" if db_url.startswith("sqlite") else "postgres"
+        desired_kind = self._checkpointer_kind_for_url(db_url)
 
         # Rebuild when switching between sqlite and postgres modes (tests frequently mutate DATABASE_URL).
         if self._graph is None or self._graph_kind != desired_kind:
             self._graph_kind = desired_kind
-            if desired_kind == "sqlite":
-                logger.info("Compiling LangGraph workflow with MemorySaver (SQLite mode)")
+            if desired_kind == "memory":
+                logger.info(
+                    "Compiling LangGraph workflow with MemorySaver (explicit ephemeral SQLite)"
+                )
                 self._graph = _GraphWrapper(get_compiled_graph(checkpointer=MemorySaver()))
             else:
                 checkpointer = self._get_async_checkpointer()
-                logger.info("Compiling LangGraph workflow with AsyncPostgresSaver")
+                logger.info(
+                    "Compiling LangGraph workflow with durable %s checkpointer", desired_kind
+                )
                 self._graph = _GraphWrapper(get_compiled_graph(checkpointer=checkpointer))
         return self._graph
 
+    def get_monthly_graph(self) -> Any:
+        """Compile the typed monthly stages on this engine's durable saver."""
+        from myloware.workflows.langgraph.studio import build_monthly_graph
+
+        if self._monthly_graph is None:
+            saver = (
+                MemorySaver()
+                if self._is_memory_sqlite_url(settings.database_url)
+                else self._get_async_checkpointer()
+            )
+            self._monthly_graph = build_monthly_graph(saver)
+        return self._monthly_graph
+
     async def check_checkpointer_health(self) -> bool:
         """Verify AsyncPostgresSaver connectivity (used by health endpoint)."""
-        if settings.database_url.startswith("sqlite"):
-            return True
+        if self._checkpointer_kind_for_url(settings.database_url) == "memory":
+            logger.warning("LangGraph checkpointer is ephemeral for SQLite :memory:")
+            return False
         try:
             await self.ensure_checkpointer_initialized()
             saver = self._get_async_checkpointer()
@@ -299,16 +375,18 @@ def build_video_workflow() -> StateGraph[VideoWorkflowState]:
     return builder
 
 
-def get_compiled_graph(checkpointer: AsyncPostgresSaver | MemorySaver | None = None) -> Any:
+def get_compiled_graph(
+    checkpointer: AsyncPostgresSaver | AsyncSqliteSaver | MemorySaver | None = None,
+) -> Any:
     """Compile the workflow graph with async checkpointer."""
     builder = build_video_workflow()
     if checkpointer is None:
         db_url = settings.database_url
-        if db_url.startswith("sqlite"):
-            logger.info("Compiling graph with in-memory checkpointer for SQLite (expected)")
+        if LangGraphEngine._is_memory_sqlite_url(db_url):
+            logger.info("Compiling graph with MemorySaver for explicit in-memory SQLite")
             checkpointer = MemorySaver()
         else:
-            # Require Postgres saver when using Postgres; fail loudly if not initialized
+            # File SQLite and Postgres both require initialized durable storage.
             checkpointer = get_langgraph_engine()._get_async_checkpointer()
     return builder.compile(checkpointer=checkpointer)
 

@@ -110,3 +110,6 @@ data/.kb_upload_cache.json
 # Local fixtures / artifacts (do not commit)
 fake_clips/
 artifacts/
+
+# Local AISMR database, fixture media and service logs
+.local/aismr/

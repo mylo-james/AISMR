@@ -1,4 +1,4 @@
-# AGENTS.md — MyloWare
+# AGENTS.md — AISMR
 
 Short, actionable rules for assistants (Codex, Cursor, etc.).
 

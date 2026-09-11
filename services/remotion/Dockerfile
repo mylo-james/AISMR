@@ -19,15 +19,22 @@ RUN apt-get update && apt-get install -y \
   libcairo2 \
   libcups2 \
   curl \
+  ffmpeg \
   && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json ./
+COPY services/remotion/package.json services/remotion/package-lock.json ./
 RUN npm i
 
-COPY tsconfig.json remotion.config.ts render.mjs ./
-COPY src ./src
-COPY api ./api
-COPY templates ./templates
+COPY services/remotion/tsconfig.json services/remotion/remotion.config.ts services/remotion/render.mjs ./
+COPY services/remotion/src ./src
+COPY services/remotion/api ./api
+COPY services/remotion/templates ./templates
+COPY services/remotion/scripts ./scripts
+# Immutable renderer-owned assets. The API accepts only the preset ID and
+# digest, never an application-selected path or remote month-bank URL.
+COPY data/media/voice/months/teacup-whisper-months-v1 ./data/media/voice/months/teacup-whisper-months-v1
+COPY data/media/voice/presets/monthly-saved-voice-v2.json ./data/media/voice/presets/monthly-saved-voice-v2.json
+COPY data/media/voice/profiles/eleven-v3-whisper-en-v1.json ./data/media/voice/profiles/eleven-v3-whisper-en-v1.json
 
 # Install Chrome Headless Shell for Remotion rendering
 RUN npx remotion browser ensure

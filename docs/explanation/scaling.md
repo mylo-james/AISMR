@@ -1,6 +1,6 @@
-# Scaling MyloWare (Production Topology)
+# Scaling AISMR (Production Topology)
 
-This document describes a **scale-ready** deployment topology for MyloWare that:
+This document describes a **scale-ready** deployment topology for AISMR that:
 - supports **N API replicas** and **M worker replicas**,
 - keeps correctness without shared process memory,
 - uses **Postgres as the only orchestration dependency** (already required for LangGraph persistence in real mode).

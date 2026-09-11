@@ -1,0 +1,558 @@
+{
+  "schema_version": 1,
+  "archive_id": "teacup-v3",
+  "source_manifest_sha256": "dcf3858eb3f2034da047e111bc93f89abdd4a54c6b7167045f8c9d11ad6064d5",
+  "entries": [
+    {
+      "role": "approved_local_render",
+      "relative_path": "render/aismr-teacups-review-v3.mp4",
+      "sha256": "5a43650628846687f114320e73463f69bf17f26f45dcc9d80a5a2d64d52d4d3c",
+      "byte_size": 92455913,
+      "duration_seconds": 80.8,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 1080,
+          "height": 1920,
+          "r_frame_rate": "30/1",
+          "nb_frames": "2424"
+        },
+        {
+          "codec_type": "audio",
+          "codec_name": "aac",
+          "r_frame_rate": "0/0",
+          "sample_rate": "48000",
+          "channels": 2,
+          "nb_frames": "3789"
+        }
+      ],
+      "object_key": "recorded/teacup-v3/5a43650628846687f114320e73463f69bf17f26f45dcc9d80a5a2d64d52d4d3c.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/01-video.mp4",
+      "sha256": "5e8c20242d14f34899a3dabf0bdf3b7dff67ff0793541b4f340fb69bdd889ccf",
+      "byte_size": 1475021,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 1,
+      "object_key": "recorded/teacup-v3/5e8c20242d14f34899a3dabf0bdf3b7dff67ff0793541b4f340fb69bdd889ccf.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/02-video.mp4",
+      "sha256": "0d45250f97dc2459137e519effce0f110d4066015519b4268d38164472da49f7",
+      "byte_size": 2413115,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 2,
+      "object_key": "recorded/teacup-v3/0d45250f97dc2459137e519effce0f110d4066015519b4268d38164472da49f7.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/03-video.mp4",
+      "sha256": "0a0212535edc410f4ede92d7073218429ae445bc548047c9b932cd42be2f8aef",
+      "byte_size": 2452353,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 3,
+      "object_key": "recorded/teacup-v3/0a0212535edc410f4ede92d7073218429ae445bc548047c9b932cd42be2f8aef.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/04-video.mp4",
+      "sha256": "f52688a2db7d08b920357abcd574d1b8b5cd8bc5c9395786d246247548a0ba65",
+      "byte_size": 1646237,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 4,
+      "object_key": "recorded/teacup-v3/f52688a2db7d08b920357abcd574d1b8b5cd8bc5c9395786d246247548a0ba65.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/05-video.mp4",
+      "sha256": "3d101016cb8670d91da0c7b449ee608aded10ff67bed0fd0876d2a7934d8d1b6",
+      "byte_size": 1689549,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 5,
+      "object_key": "recorded/teacup-v3/3d101016cb8670d91da0c7b449ee608aded10ff67bed0fd0876d2a7934d8d1b6.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/06-video.mp4",
+      "sha256": "c9ff7236fbccfaa616847d1f4d1ecb0dc55f5a0c1863f75cf8a811c0385c7a43",
+      "byte_size": 2724594,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 6,
+      "object_key": "recorded/teacup-v3/c9ff7236fbccfaa616847d1f4d1ecb0dc55f5a0c1863f75cf8a811c0385c7a43.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/07-video.mp4",
+      "sha256": "407b006c666f045d5b0eeb8789df6f2d88087feb15ad35b241da6ccee165f3fd",
+      "byte_size": 1544154,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 7,
+      "object_key": "recorded/teacup-v3/407b006c666f045d5b0eeb8789df6f2d88087feb15ad35b241da6ccee165f3fd.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/08-video.mp4",
+      "sha256": "c4bbe82a4dbef741ac0bb330d19c2ba620e608ee9ce215a80c1633132ab8c928",
+      "byte_size": 1729135,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 8,
+      "object_key": "recorded/teacup-v3/c4bbe82a4dbef741ac0bb330d19c2ba620e608ee9ce215a80c1633132ab8c928.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/09-video.mp4",
+      "sha256": "fe1647ecba9a2e44bcdac59c88131235edce99c410ef1b0d205ff90013d7c3c4",
+      "byte_size": 1465719,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 9,
+      "object_key": "recorded/teacup-v3/fe1647ecba9a2e44bcdac59c88131235edce99c410ef1b0d205ff90013d7c3c4.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/10-video.mp4",
+      "sha256": "b2c0a269c5ee362689ee0e61e8898c70c73843848b21624b561e99dfd58c0045",
+      "byte_size": 584299,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 10,
+      "object_key": "recorded/teacup-v3/b2c0a269c5ee362689ee0e61e8898c70c73843848b21624b561e99dfd58c0045.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/11-video.mp4",
+      "sha256": "fc759762dfe6eb4ba7ee8d63e4f03ff124e477f408c8f1e3c3baec3e362c4f3b",
+      "byte_size": 1293539,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 11,
+      "object_key": "recorded/teacup-v3/fc759762dfe6eb4ba7ee8d63e4f03ff124e477f408c8f1e3c3baec3e362c4f3b.mp4"
+    },
+    {
+      "role": "recorded_video_provider_output",
+      "relative_path": "video/12-video.mp4",
+      "sha256": "2fb3bb55bf87a23c81f7ce1a18feb1db9b20ea43e2889b7eeb1e18230237b9a1",
+      "byte_size": 2076239,
+      "duration_seconds": 6.708333,
+      "streams": [
+        {
+          "codec_type": "video",
+          "codec_name": "h264",
+          "width": 480,
+          "height": 832,
+          "r_frame_rate": "24/1",
+          "nb_frames": "161"
+        }
+      ],
+      "ordinal": 12,
+      "object_key": "recorded/teacup-v3/2fb3bb55bf87a23c81f7ce1a18feb1db9b20ea43e2889b7eeb1e18230237b9a1.mp4"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/01-voice.wav",
+      "sha256": "e89430475d33598484a953ebe12877c0346aa13e1ae5dfe88d3653d8ae618807",
+      "byte_size": 188920,
+      "duration_seconds": 3.934208,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 1,
+      "narration": "January. Frozen Teacup.",
+      "object_key": "recorded/teacup-v3/e89430475d33598484a953ebe12877c0346aa13e1ae5dfe88d3653d8ae618807.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/02-voice.wav",
+      "sha256": "84b1b8f74570ce52ae0e4f47fe782ef3a67719b3aa2a79a7fbd88b5b18c8173b",
+      "byte_size": 186024,
+      "duration_seconds": 3.873875,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 2,
+      "narration": "February. Diamond Teacup.",
+      "object_key": "recorded/teacup-v3/84b1b8f74570ce52ae0e4f47fe782ef3a67719b3aa2a79a7fbd88b5b18c8173b.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/03-voice.wav",
+      "sha256": "94cf17382563e665be8b925cc3c441250e7853a78c567ef9acaa37bb220a772a",
+      "byte_size": 162170,
+      "duration_seconds": 3.376917,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 3,
+      "narration": "March. Moss Teacup.",
+      "object_key": "recorded/teacup-v3/94cf17382563e665be8b925cc3c441250e7853a78c567ef9acaa37bb220a772a.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/04-voice.wav",
+      "sha256": "1e07746014d84fa15c7e5c12d87d5b648d7b7a470e9a404edbb19ce97bffa412",
+      "byte_size": 154062,
+      "duration_seconds": 3.208,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 4,
+      "narration": "April. Mercury Teacup.",
+      "object_key": "recorded/teacup-v3/1e07746014d84fa15c7e5c12d87d5b648d7b7a470e9a404edbb19ce97bffa412.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/05-voice.wav",
+      "sha256": "4004f22154379b6ca3c065142226b843dd10d6b7b32e485a7192b124321fb4ef",
+      "byte_size": 154034,
+      "duration_seconds": 3.207417,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 5,
+      "narration": "May. Cloud Teacup.",
+      "object_key": "recorded/teacup-v3/4004f22154379b6ca3c065142226b843dd10d6b7b32e485a7192b124321fb4ef.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/06-voice.wav",
+      "sha256": "a31a006b77d9fd8ec42e1e99b4e5575bec876caa5632b0138573158eb94787c6",
+      "byte_size": 143940,
+      "duration_seconds": 2.997125,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 6,
+      "narration": "June. Coral Teacup.",
+      "object_key": "recorded/teacup-v3/a31a006b77d9fd8ec42e1e99b4e5575bec876caa5632b0138573158eb94787c6.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/07-voice.wav",
+      "sha256": "6a89218e6d83c820ac9cd44ba24e8c1fa86d16ad323536d8eb5d91f469087fe4",
+      "byte_size": 149162,
+      "duration_seconds": 3.105917,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 7,
+      "narration": "July. Wax Teacup.",
+      "object_key": "recorded/teacup-v3/6a89218e6d83c820ac9cd44ba24e8c1fa86d16ad323536d8eb5d91f469087fe4.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/08-voice.wav",
+      "sha256": "b7b12d55ea37da98089887f41692ddf247457ae074e898087a2c4ceecec298cd",
+      "byte_size": 142758,
+      "duration_seconds": 2.9725,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 8,
+      "narration": "August. Feather Teacup.",
+      "object_key": "recorded/teacup-v3/b7b12d55ea37da98089887f41692ddf247457ae074e898087a2c4ceecec298cd.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/09-voice.wav",
+      "sha256": "0330db1aef696c67467a0158a15f915bc8e31a221df5c864106cb0883ca4d087",
+      "byte_size": 156840,
+      "duration_seconds": 3.265875,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 9,
+      "narration": "September. Amber Teacup.",
+      "object_key": "recorded/teacup-v3/0330db1aef696c67467a0158a15f915bc8e31a221df5c864106cb0883ca4d087.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/10-voice.wav",
+      "sha256": "68f1a78333e44a4a3b521c9eb2c896deb6b86457ebbc1aaf9146a29b20eaad1c",
+      "byte_size": 164802,
+      "duration_seconds": 3.43175,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 10,
+      "narration": "October. Velvet Teacup.",
+      "object_key": "recorded/teacup-v3/68f1a78333e44a4a3b521c9eb2c896deb6b86457ebbc1aaf9146a29b20eaad1c.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/11-voice.wav",
+      "sha256": "94aa2a96bbe0c03bdfd60bb9f9492df7e0f706ce8ecf163ff72508c0d7f4aa6c",
+      "byte_size": 153314,
+      "duration_seconds": 3.192417,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 11,
+      "narration": "November. Salt Teacup.",
+      "object_key": "recorded/teacup-v3/94aa2a96bbe0c03bdfd60bb9f9492df7e0f706ce8ecf163ff72508c0d7f4aa6c.wav"
+    },
+    {
+      "role": "recorded_voice_provider_output_pause_split",
+      "relative_path": "voice/12-voice.wav",
+      "sha256": "597f529c52d52c5dd12c0a4478e08c2db703b5de730256db2f8149c73e170ffc",
+      "byte_size": 139796,
+      "duration_seconds": 2.910792,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "pcm_s16le",
+          "r_frame_rate": "0/0",
+          "sample_rate": "24000",
+          "channels": 1
+        }
+      ],
+      "ordinal": 12,
+      "narration": "December. Star Teacup.",
+      "object_key": "recorded/teacup-v3/597f529c52d52c5dd12c0a4478e08c2db703b5de730256db2f8149c73e170ffc.wav"
+    },
+    {
+      "role": "recorded_voice_provider_batch",
+      "relative_path": "voice/original-batch.mp3",
+      "sha256": "c580b32201095f3e52b715b6eaa01d81276c50f24a12ae842424744df779762e",
+      "byte_size": 813393,
+      "duration_seconds": 50.83425,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "mp3",
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 1
+        }
+      ],
+      "object_key": "recorded/teacup-v3/c580b32201095f3e52b715b6eaa01d81276c50f24a12ae842424744df779762e.mp3"
+    },
+    {
+      "role": "recorded_voice_provider_timestamps",
+      "relative_path": "voice/timestamps.json",
+      "sha256": "c53242a860a954a3fd8a370ab80ebf045aa88031f9184cec3e4b81a387137f21",
+      "byte_size": 22931,
+      "object_key": "recorded/teacup-v3/c53242a860a954a3fd8a370ab80ebf045aa88031f9184cec3e4b81a387137f21.json"
+    },
+    {
+      "role": "recorded_cc0_music",
+      "relative_path": "music/john-bartmann-tender-moment.mp3",
+      "sha256": "25215e633c8eab3ee27c82f7b2f9c5af78f1d1e1ea48308a07e6e9d1acd06ae5",
+      "byte_size": 6624522,
+      "duration_seconds": 190.654694,
+      "streams": [
+        {
+          "codec_type": "audio",
+          "codec_name": "mp3",
+          "r_frame_rate": "0/0",
+          "sample_rate": "44100",
+          "channels": 2
+        },
+        {
+          "codec_type": "video",
+          "codec_name": "mjpeg",
+          "width": 1916,
+          "height": 1916,
+          "r_frame_rate": "90000/1"
+        }
+      ],
+      "object_key": "recorded/teacup-v3/25215e633c8eab3ee27c82f7b2f9c5af78f1d1e1ea48308a07e6e9d1acd06ae5.mp3"
+    },
+    {
+      "role": "music_license_evidence",
+      "relative_path": "music/LICENSE-EVIDENCE.md",
+      "sha256": "f96583f163f5d9aa5f9743a4d15158029fd43766d859cc7d0ca7e678cf82ff82",
+      "byte_size": 2342,
+      "object_key": "recorded/teacup-v3/f96583f163f5d9aa5f9743a4d15158029fd43766d859cc7d0ca7e678cf82ff82.md"
+    },
+    {
+      "role": "accepted_monthly_plan",
+      "relative_path": "plan/dreamlike-plan.json",
+      "sha256": "152517412c65d1d793140b34c8a51245b304888b0f174e4ab9c9b77ac3fe9b47",
+      "byte_size": 7241,
+      "object_key": "recorded/teacup-v3/152517412c65d1d793140b34c8a51245b304888b0f174e4ab9c9b77ac3fe9b47.json"
+    },
+    {
+      "role": "pause_split_provenance",
+      "relative_path": "voice/pause-split-manifest.json",
+      "sha256": "629ac0f12b3f1a083c969d9b6d46072a1d4002f9885ab1fc5a09132b3b369c4a",
+      "byte_size": 6213,
+      "object_key": "recorded/teacup-v3/629ac0f12b3f1a083c969d9b6d46072a1d4002f9885ab1fc5a09132b3b369c4a.json"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-"""MyloWare tools module - Custom Llama Stack tools for external integrations.
+"""AISMR tools module - Custom Llama Stack tools for external integrations.
 
 Uses Llama Stack's native ClientTool pattern (0.3.x+).
 For RAG, use native file_search tool instead of custom implementations.

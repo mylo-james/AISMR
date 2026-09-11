@@ -1,4 +1,4 @@
-"""MyloWare observability module - Logging and telemetry.
+"""AISMR observability module - Logging and telemetry.
 
 Observability is handled at two levels:
 1. **Logging**: Structured JSON logs via structlog

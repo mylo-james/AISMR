@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
-import asyncio
 import anyio
 import pytest
 
@@ -42,7 +42,7 @@ async def test_lease_heartbeat_touches_lease_and_commits(monkeypatch) -> None:
         def __init__(self, _session):  # type: ignore[no-untyped-def]
             return None
 
-        async def touch_lease_async(self, job_id, *, worker_id, lease_seconds):  # type: ignore[no-untyped-def]
+        async def touch_lease_async(self, job_id, *, worker_id, claim_generation, lease_seconds):  # type: ignore[no-untyped-def]
             calls.append((job_id, worker_id, float(lease_seconds)))
             stop_event.set()
 
@@ -59,7 +59,7 @@ async def test_lease_heartbeat_touches_lease_and_commits(monkeypatch) -> None:
 
     monkeypatch.setattr(worker_mod.anyio, "sleep", fake_sleep)
 
-    await worker_mod._lease_heartbeat(job_id, "w1", lease_seconds=9.0, stop_event=stop_event)
+    await worker_mod._lease_heartbeat(job_id, "w1", 1, lease_seconds=9.0, stop_event=stop_event)
 
     assert calls and calls[0][0] == job_id
 
@@ -99,7 +99,7 @@ async def test_lease_heartbeat_logs_warning_on_errors(monkeypatch) -> None:
 
     monkeypatch.setattr(worker_mod.anyio, "sleep", fake_sleep)
 
-    await worker_mod._lease_heartbeat(job_id, "w1", lease_seconds=9.0, stop_event=stop_event)
+    await worker_mod._lease_heartbeat(job_id, "w1", 1, lease_seconds=9.0, stop_event=stop_event)
 
 
 @dataclass
@@ -110,6 +110,7 @@ class FakeJob:
     payload: dict[str, object]
     attempts: int = 1
     max_attempts: int = 1
+    claim_generation: int = 1
 
 
 class FakeResult:
@@ -153,11 +154,16 @@ class FakeJobRepo:
         self._status = JobStatus.FAILED
         self.last_failed_error: str | None = None
         self.last_failed_delay: float | None = None
+        self.current_job: FakeJob | None = None
 
-    async def mark_succeeded_async(self, job_id: UUID) -> None:
+    async def get_current_claim_async(self, *_a, **_kw):  # type: ignore[no-untyped-def]
+        return self.current_job
+
+    async def mark_succeeded_async(self, job_id: UUID, **_kw) -> bool:  # type: ignore[no-untyped-def]
         self.succeeded.append(job_id)
+        return True
 
-    async def mark_failed_async(self, job_id: UUID, *, error: str, retry_delay_seconds: float):  # type: ignore[no-untyped-def]
+    async def mark_failed_async(self, job_id: UUID, *, error: str, retry_delay_seconds: float, **_kw):  # type: ignore[no-untyped-def]
         self.failed.append(job_id)
         self.last_failed_error = str(error)
         self.last_failed_delay = float(retry_delay_seconds)
@@ -199,7 +205,7 @@ async def test_process_one_job_returns_when_job_missing(monkeypatch) -> None:
     monkeypatch.setattr(worker_mod, "ArtifactRepository", FakeArtifactRepo)
     monkeypatch.setattr(worker_mod, "DeadLetterRepository", FakeDLQRepo)
 
-    await worker_mod._process_one_job(uuid4(), "w", lease_seconds=1.0)
+    await worker_mod._process_one_job(uuid4(), "w", 1, lease_seconds=1.0)
     assert session.commits == 0
 
 
@@ -210,6 +216,7 @@ async def test_process_one_job_marks_succeeded(monkeypatch) -> None:
     session = FakeSession(job=job)
 
     repo = FakeJobRepo(object())
+    repo.current_job = job
     dlq_repo = FakeDLQRepo(object())
 
     monkeypatch.setattr(
@@ -230,7 +237,7 @@ async def test_process_one_job_marks_succeeded(monkeypatch) -> None:
     monkeypatch.setattr(worker_mod, "handle_job", fake_handle_job)
     monkeypatch.setattr(worker_mod, "_lease_heartbeat", fake_heartbeat)
 
-    await worker_mod._process_one_job(job_id, "w", lease_seconds=1.0)
+    await worker_mod._process_one_job(job_id, "w", 1, lease_seconds=1.0)
 
     assert repo.succeeded == [job_id]
     assert session.commits == 1
@@ -247,6 +254,7 @@ async def test_process_one_job_reschedules_without_dlq(monkeypatch) -> None:
     session = FakeSession(job=job)
 
     repo = FakeJobRepo(object())
+    repo.current_job = job
     repo._status = JobStatus.PENDING
     dlq_repo = FakeDLQRepo(object())
 
@@ -273,7 +281,7 @@ async def test_process_one_job_reschedules_without_dlq(monkeypatch) -> None:
     monkeypatch.setattr(worker_mod, "_lease_heartbeat", fake_heartbeat)
     monkeypatch.setattr(FakeSession, "rollback", fake_rollback, raising=False)
 
-    await worker_mod._process_one_job(job_id, "w", lease_seconds=1.0)
+    await worker_mod._process_one_job(job_id, "w", 1, lease_seconds=1.0)
 
     assert repo.succeeded == []
     assert repo.failed == [job_id]
@@ -291,6 +299,7 @@ async def test_process_one_job_marks_failed_and_writes_dlq_on_terminal(monkeypat
     session = FakeSession(job=job)
 
     repo = FakeJobRepo(object())
+    repo.current_job = job
     repo._status = JobStatus.FAILED
     dlq_repo = FakeDLQRepo(object())
 
@@ -313,7 +322,7 @@ async def test_process_one_job_marks_failed_and_writes_dlq_on_terminal(monkeypat
     monkeypatch.setattr(worker_mod, "handle_job", fake_handle_job)
     monkeypatch.setattr(worker_mod, "_lease_heartbeat", fake_heartbeat)
 
-    await worker_mod._process_one_job(job_id, "w", lease_seconds=1.0)
+    await worker_mod._process_one_job(job_id, "w", 1, lease_seconds=1.0)
 
     assert repo.failed == [job_id]
     assert dlq_repo.created and dlq_repo.created[0]["source"] == "sora"
@@ -328,6 +337,7 @@ async def test_process_one_job_swallow_dlq_write_failure(monkeypatch) -> None:
     session = FakeSession(job=job)
 
     repo = FakeJobRepo(object())
+    repo.current_job = job
     repo._status = JobStatus.FAILED
     dlq_repo = FakeDLQRepo(object())
     dlq_repo.raise_on_create = True
@@ -351,7 +361,7 @@ async def test_process_one_job_swallow_dlq_write_failure(monkeypatch) -> None:
     monkeypatch.setattr(worker_mod, "handle_job", fake_handle_job)
     monkeypatch.setattr(worker_mod, "_lease_heartbeat", fake_heartbeat)
 
-    await worker_mod._process_one_job(job_id, "w", lease_seconds=1.0)
+    await worker_mod._process_one_job(job_id, "w", 1, lease_seconds=1.0)
 
     assert repo.failed == [job_id]
     assert dlq_repo.created == []
@@ -414,7 +424,7 @@ async def test_run_worker_once_processes_claimed_job(monkeypatch) -> None:
 
         async def claim_next_async(self, *, worker_id: str, lease_seconds: float):  # type: ignore[no-untyped-def]
             assert worker_id == "w"
-            return SimpleNamespace(id=job_id)
+            return SimpleNamespace(id=job_id, claim_generation=1)
 
     class FakeSessionCM:
         async def __aenter__(self):  # type: ignore[no-untyped-def]
@@ -538,9 +548,12 @@ async def test_run_worker_loop_sleeps_when_no_jobs(monkeypatch) -> None:
     monkeypatch.setattr(worker_mod.anyio, "sleep", lambda _s: asyncio.sleep(0))
     monkeypatch.setattr(worker_mod.anyio, "Semaphore", lambda n: FakeLimiter(n))
     monkeypatch.setattr(worker_mod.anyio, "create_task_group", lambda: FakeTaskGroup())
+    housekeeping = AsyncMock(return_value=None)
+    monkeypatch.setattr(worker_mod, "_run_studio_housekeeping", housekeeping)
 
     with pytest.raises(RuntimeError, match="stop"):
         await worker_mod.run_worker(once=False)
+    housekeeping.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -559,7 +572,7 @@ async def test_run_worker_loop_starts_task_for_claimed_job(monkeypatch) -> None:
             return None
 
         async def claim_next_async(self, *, worker_id: str, lease_seconds: float):  # type: ignore[no-untyped-def]
-            return SimpleNamespace(id=job_id)
+            return SimpleNamespace(id=job_id, claim_generation=1)
 
     class FakeSessionCM:
         async def __aenter__(self):  # type: ignore[no-untyped-def]

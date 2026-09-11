@@ -17,7 +17,7 @@ def config() -> None:
 @config.command("show")
 def config_show() -> None:
     """Show key configuration settings."""
-    table = Table(title="MyloWare Configuration", show_lines=False)
+    table = Table(title="AISMR Configuration", show_lines=False)
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="white")
 

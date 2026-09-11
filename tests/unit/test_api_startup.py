@@ -39,9 +39,12 @@ def test_load_knowledge_documents_with_files():
         metadata={"document": "test2", "kb_type": "global", "chunk_index": 0},
     )
 
-    with patch(
-        "myloware.api.server.load_documents_with_manifest",
-        return_value=([doc1, doc2], {"hash": "h1"}),
+    with (
+        patch(
+            "myloware.api.server.load_documents_with_manifest",
+            return_value=([doc1, doc2], {"hash": "h1"}),
+        ),
+        patch("myloware.api.server.save_manifest"),
     ):
         from myloware.api.server import _load_knowledge_documents
 

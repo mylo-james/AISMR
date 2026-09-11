@@ -52,5 +52,5 @@ instructions: |
   ```
 
 tools:
-  - builtin::rag/knowledge_search
+  - role_knowledge_search
 

@@ -37,7 +37,12 @@ __all__ = [
     "FeedbackRepository",
     "DeadLetterRepository",
     "JobRepository",
+    "StaleJobClaim",
 ]
+
+
+class StaleJobClaim(RuntimeError):
+    """Raised when a worker attempts to mutate a job it no longer owns."""
 
 
 class RunRepository:
@@ -62,6 +67,9 @@ class RunRepository:
         # Support both sync and async sessions; prefer async path for AsyncSession callers
         if isinstance(self.session, AsyncSession):
             raise TypeError("Use create_async() with AsyncSession")
+        from myloware.workflows.admission import require_legacy_run_creation_allowed
+
+        require_legacy_run_creation_allowed()
 
         if telegram_chat_id is not None:
             try:
@@ -102,6 +110,9 @@ class RunRepository:
         """Create a run using an AsyncSession."""
         if not isinstance(self.session, AsyncSession):
             raise TypeError("Use create() with Session")
+        from myloware.workflows.admission import require_legacy_run_creation_allowed
+
+        require_legacy_run_creation_allowed()
         # Normalize telegram_chat_id to int to match DB column (bigint)
         if telegram_chat_id is not None:
             try:
@@ -947,7 +958,14 @@ class JobRepository:
             raise ValueError("job_already_enqueued") from exc
         return job
 
-    async def claim_next_async(self, *, worker_id: str, lease_seconds: float = 60.0) -> Job | None:
+    async def claim_next_async(
+        self,
+        *,
+        worker_id: str,
+        lease_seconds: float = 60.0,
+        run_id: UUID | None = None,
+        job_types: tuple[str, ...] | None = None,
+    ) -> Job | None:
         """Claim the next available job.
 
         Uses SKIP LOCKED on Postgres; falls back to optimistic claim on SQLite.
@@ -965,6 +983,11 @@ class JobRepository:
             ),
             and_(Job.status == JobStatus.RUNNING.value, Job.lease_expires_at <= now),
         )
+
+        if run_id is not None:
+            eligible = and_(eligible, Job.run_id == run_id)
+        if job_types is not None:
+            eligible = and_(eligible, Job.job_type.in_(job_types))
 
         dialect = self._dialect_name()
         if dialect == "postgresql":
@@ -985,6 +1008,7 @@ class JobRepository:
             job.claimed_by = worker_id
             job.lease_expires_at = lease_expires_at
             job.attempts = int(job.attempts or 0) + 1
+            job.claim_generation = int(job.claim_generation or 0) + 1
             await self.session.flush()
             return job
 
@@ -1011,6 +1035,7 @@ class JobRepository:
                 claimed_by=worker_id,
                 lease_expires_at=lease_expires_at,
                 attempts=Job.attempts + 1,
+                claim_generation=Job.claim_generation + 1,
             )
         )
         res = await self.session.execute(upd)
@@ -1025,8 +1050,9 @@ class JobRepository:
         job_id: UUID,
         *,
         worker_id: str,
+        claim_generation: int,
         lease_seconds: float = 60.0,
-    ) -> None:
+    ) -> bool:
         if not isinstance(self.session, AsyncSession):
             raise TypeError("touch_lease_async requires an AsyncSession")
         now = self._utc_now_naive()
@@ -1037,19 +1063,46 @@ class JobRepository:
                 Job.id == job_id,
                 Job.status == JobStatus.RUNNING.value,
                 Job.claimed_by == worker_id,
+                Job.claim_generation == claim_generation,
             )
             .values(lease_expires_at=lease_expires_at, updated_at=now)
         )
-        await self.session.execute(upd)
+        result = await self.session.execute(upd)
         await self.session.flush()
+        if not getattr(result, "rowcount", 0):
+            raise StaleJobClaim(f"stale claim for job {job_id}")
+        return True
 
-    async def mark_succeeded_async(self, job_id: UUID) -> None:
+    async def get_current_claim_async(
+        self, job_id: UUID, *, worker_id: str, claim_generation: int
+    ) -> Job | None:
+        """Return a job only while this exact worker claim remains current."""
+        if not isinstance(self.session, AsyncSession):
+            raise TypeError("get_current_claim_async requires an AsyncSession")
+        result = await self.session.execute(
+            select(Job).where(
+                Job.id == job_id,
+                Job.status == JobStatus.RUNNING.value,
+                Job.claimed_by == worker_id,
+                Job.claim_generation == claim_generation,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def mark_succeeded_async(
+        self, job_id: UUID, *, worker_id: str, claim_generation: int
+    ) -> bool:
         if not isinstance(self.session, AsyncSession):
             raise TypeError("mark_succeeded_async requires an AsyncSession")
         now = self._utc_now_naive()
         upd = (
             update(Job)
-            .where(Job.id == job_id)
+            .where(
+                Job.id == job_id,
+                Job.status == JobStatus.RUNNING.value,
+                Job.claimed_by == worker_id,
+                Job.claim_generation == claim_generation,
+            )
             .values(
                 status=JobStatus.SUCCEEDED.value,
                 lease_expires_at=None,
@@ -1057,13 +1110,18 @@ class JobRepository:
                 updated_at=now,
             )
         )
-        await self.session.execute(upd)
+        result = await self.session.execute(upd)
         await self.session.flush()
+        if not getattr(result, "rowcount", 0):
+            raise StaleJobClaim(f"stale claim for job {job_id}")
+        return True
 
     async def mark_failed_async(
         self,
         job_id: UUID,
         *,
+        worker_id: str,
+        claim_generation: int,
         error: str,
         retry_delay_seconds: float = 5.0,
     ) -> JobStatus:
@@ -1074,21 +1132,41 @@ class JobRepository:
         if not isinstance(self.session, AsyncSession):
             raise TypeError("mark_failed_async requires an AsyncSession")
 
-        job = await self.session.get(Job, job_id)
+        job = await self.get_current_claim_async(
+            job_id, worker_id=worker_id, claim_generation=claim_generation
+        )
         if job is None:
-            return JobStatus.FAILED
-
-        job.last_error = error
-        job.lease_expires_at = None
-        job.claimed_by = None
+            raise StaleJobClaim(f"stale claim for job {job_id}")
 
         if int(job.attempts or 0) >= int(job.max_attempts or 0):
-            job.status = JobStatus.FAILED.value
-            await self.session.flush()
-            return JobStatus.FAILED
+            status = JobStatus.FAILED
+            available_at = job.available_at
+        else:
+            status = JobStatus.PENDING
+            available_at = self._utc_now_naive() + timedelta(seconds=float(retry_delay_seconds))
 
         now = self._utc_now_naive()
-        job.status = JobStatus.PENDING.value
-        job.available_at = now + timedelta(seconds=float(retry_delay_seconds))
+        upd = (
+            update(Job)
+            .where(
+                Job.id == job_id,
+                Job.status == JobStatus.RUNNING.value,
+                Job.claimed_by == worker_id,
+                Job.claim_generation == claim_generation,
+            )
+            .values(
+                status=status.value,
+                last_error=error,
+                lease_expires_at=None,
+                claimed_by=None,
+                available_at=available_at,
+                updated_at=now,
+            )
+        )
+        result = await self.session.execute(upd)
         await self.session.flush()
+        if not getattr(result, "rowcount", 0):
+            raise StaleJobClaim(f"stale claim for job {job_id}")
+        if status is JobStatus.FAILED:
+            return JobStatus.FAILED
         return JobStatus.PENDING

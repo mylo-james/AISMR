@@ -17,6 +17,13 @@ docs/
 tests/
 *.md
 !README.md
+# Keep local environments, runtime state and listening-review copies out of builds.
+.venv/
+.local/
+.tmp/
+services/remotion/node_modules/
+data/media/voice/reviews/
+data/media/voice/months/*-review/
 .cursor*
 .vscode
 *.log

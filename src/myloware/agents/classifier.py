@@ -35,7 +35,7 @@ class ClassificationResult(BaseModel):
     confidence: float = Field(default=1.0, description="Classification confidence (0-1)")
 
 
-CLASSIFICATION_PROMPT = """You are a request classifier for MyloWare, a video production platform.
+CLASSIFICATION_PROMPT = """You are a request classifier for AISMR, a video production platform.
 
 Analyze the user's message and classify:
 1. intent: What they want to do

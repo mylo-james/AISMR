@@ -1,0 +1,52 @@
+name: aismr
+
+x-app: &app
+  image: ${AISMR_APP_IMAGE:?Set the reviewed AISMR application image digest}
+  env_file: ${AISMR_APP_ENV_FILE:?Set the private app environment file path}
+  init: true
+  restart: unless-stopped
+  stop_grace_period: 45s
+  volumes:
+    - ${AISMR_STORAGE_ROOT:?Set the persistent storage root}/source:/var/lib/aismr/source
+    - ${AISMR_STORAGE_ROOT:?Set the persistent storage root}/library:/var/lib/aismr/library
+    - ${AISMR_RIGHTS_FILE:?Set the reviewed public-use profile path}:/run/aismr/rights-profile.json:ro
+
+services:
+  migrate:
+    image: ${AISMR_APP_IMAGE:?Set the reviewed AISMR application image digest}
+    env_file: ${AISMR_MIGRATION_ENV_FILE:?Set the private migration environment file path}
+    command: ["alembic", "upgrade", "head"]
+    profiles: ["migration"]
+    restart: "no"
+
+  api:
+    <<: *app
+    command: ["uvicorn", "myloware.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "${AISMR_TRUSTED_PROXY_IPS:?Set only the actual ingress proxy addresses}"]
+    ports: ["127.0.0.1:8311:8000"]
+
+  worker:
+    <<: *app
+    command: ["aismr", "worker", "run"]
+    healthcheck:
+      disable: true
+    depends_on:
+      api:
+        condition: service_healthy
+      renderer:
+        condition: service_healthy
+
+  renderer:
+    image: ${AISMR_RENDERER_IMAGE:?Set the reviewed AISMR renderer image digest}
+    env_file: ${AISMR_RENDERER_ENV_FILE:?Set the private renderer environment file path}
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 45s
+    volumes:
+      - ${AISMR_STORAGE_ROOT:?Set the persistent storage root}/renderer-output:/app/output
+      - ${AISMR_STORAGE_ROOT:?Set the persistent storage root}/renderer-tmp:/app/render-tmp
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

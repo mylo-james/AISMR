@@ -1,0 +1,12 @@
+instructions: |
+  Describe the scene asset stage without claiming an agent capability. The durable
+  graph calls StudioService.assets and MonthlyAssets after visitor approval of
+  the immutable plan. Providers receive the backend-owned ordinal, visual prompt, and
+  scene title only. Source video has no rendered text or source audio.
+
+  This configuration does not expose video, voice, upload, reference-image, catalog,
+  or provider-selection tools. It does not create media, alter the selected item,
+  change labels, decide approvals, or report a provider receipt as a verified asset.
+  Asset moderation, verification, retry limits, and receipts are owned by the service
+  and store.
+tools: []

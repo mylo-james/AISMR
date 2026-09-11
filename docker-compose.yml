@@ -1,5 +1,5 @@
 # =============================================================================
-# MyloWare Local Development Docker Compose
+# AISMR Local Development Docker Compose
 # =============================================================================
 #
 # Usage:
@@ -9,7 +9,7 @@
 #   - llama-stack: Llama Stack distribution (port 5001)
 #   - postgres: PostgreSQL database (port 5432)
 #   - jaeger: Distributed tracing UI (port 16686)
-#   - myloware: MyloWare API (port 8000)
+#   - aismr: AISMR API (port 8000)
 #   - remotion: Video rendering service (port 3001)
 #
 # =============================================================================
@@ -48,7 +48,7 @@ services:
       start_period: 60s
 
   # ---------------------------------------------------------------------------
-  # PostgreSQL Database (shared by MyloWare and Langfuse)
+  # PostgreSQL Database (shared by AISMR and Langfuse)
   # ---------------------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg15  # Postgres with pgvector extension
@@ -84,9 +84,9 @@ services:
       retries: 5
 
   # ---------------------------------------------------------------------------
-  # MyloWare API
+  # AISMR API
   # ---------------------------------------------------------------------------
-  myloware:
+  aismr:
     build: .
     ports:
       - '8000:8000'
@@ -98,7 +98,7 @@ services:
       - LLAMA_STACK_PROVIDER=${LLAMA_STACK_PROVIDER:-real}
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/myloware
       - WORKFLOW_DISPATCHER=${WORKFLOW_DISPATCHER:-db}
-      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-http://myloware:8000}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-http://aismr:8000}
       - LOG_LEVEL=DEBUG
       - SORA_PROVIDER=${SORA_PROVIDER:-fake}
       - REMOTION_PROVIDER=${REMOTION_PROVIDER:-fake}
@@ -111,7 +111,7 @@ services:
       - REMOTION_ALLOW_COMPOSITION_CODE=${REMOTION_ALLOW_COMPOSITION_CODE:-false}
       # OpenTelemetry (Llama Stack native)
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
-      - OTEL_SERVICE_NAME=myloware
+      - OTEL_SERVICE_NAME=aismr
     volumes:
       - ./artifacts/transcoded:/tmp/myloware_videos
       - ./fake_clips:/app/fake_clips:ro
@@ -129,11 +129,11 @@ services:
       retries: 3
 
   # ---------------------------------------------------------------------------
-  # MyloWare Worker (durable job queue)
+  # AISMR Worker (durable job queue)
   # ---------------------------------------------------------------------------
-  myloware-worker:
+  aismr-worker:
     build: .
-    command: ["bash", "-lc", "alembic upgrade head && myloware worker run"]
+    command: ["bash", "-lc", "alembic upgrade head && aismr worker run"]
     env_file: .env
     environment:
       - PYTHONPATH=/app/src
@@ -141,7 +141,7 @@ services:
       - LLAMA_STACK_PROVIDER=${LLAMA_STACK_PROVIDER:-real}
       - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres:5432/myloware
       - WORKFLOW_DISPATCHER=${WORKFLOW_DISPATCHER:-db}
-      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-http://myloware:8000}
+      - WEBHOOK_BASE_URL=${WEBHOOK_BASE_URL:-http://aismr:8000}
       - LOG_LEVEL=DEBUG
       - SORA_PROVIDER=${SORA_PROVIDER:-fake}
       - REMOTION_PROVIDER=${REMOTION_PROVIDER:-fake}
@@ -152,7 +152,7 @@ services:
       - REMOTION_SANDBOX_STRICT=${REMOTION_SANDBOX_STRICT:-false}
       - REMOTION_ALLOW_COMPOSITION_CODE=${REMOTION_ALLOW_COMPOSITION_CODE:-false}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
-      - OTEL_SERVICE_NAME=myloware-worker
+      - OTEL_SERVICE_NAME=aismr-worker
     volumes:
       - ./artifacts/transcoded:/tmp/myloware_videos
       - ./fake_clips:/app/fake_clips:ro
@@ -168,13 +168,15 @@ services:
   # Remotion Render Service (self-hosted video rendering)
   # ---------------------------------------------------------------------------
   remotion:
-    build: ./services/remotion
+    build:
+      context: .
+      dockerfile: services/remotion/Dockerfile
     ports:
       - '3001:3001'
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - CONCURRENCY=2
+      - REMOTION_JOB_CONCURRENCY=${REMOTION_JOB_CONCURRENCY:-1}
       - PUBLIC_BASE_URL=http://remotion:3001
       - WEBHOOK_SECRET=${REMOTION_WEBHOOK_SECRET:-}
       - REMOTION_API_SECRET=${REMOTION_API_SECRET:-}
@@ -182,10 +184,17 @@ services:
       - REMOTION_SANDBOX_STRICT=${REMOTION_SANDBOX_STRICT:-false}
       - REMOTION_ALLOW_COMPOSITION_CODE=${REMOTION_ALLOW_COMPOSITION_CODE:-false}
       - REMOTION_OUTPUT_PUBLIC=${REMOTION_OUTPUT_PUBLIC:-false}
-      - REMOTION_CALLBACK_ALLOWLIST=${REMOTION_CALLBACK_ALLOWLIST:-myloware}
+      - REMOTION_CALLBACK_ALLOWLIST=${REMOTION_CALLBACK_ALLOWLIST:-aismr}
       - REMOTION_RENDER_TIMEOUT_SECONDS=${REMOTION_RENDER_TIMEOUT_SECONDS:-900}
       - REMOTION_CALLBACK_TIMEOUT_MS=${REMOTION_CALLBACK_TIMEOUT_MS:-5000}
-      - REMOTION_FRAME_CONCURRENCY=${REMOTION_FRAME_CONCURRENCY:-100%}
+      - REMOTION_FRAME_CONCURRENCY=${REMOTION_FRAME_CONCURRENCY:-1}
+      - REMOTION_MEDIA_ALLOWED_ORIGINS=${REMOTION_MEDIA_ALLOWED_ORIGINS:-}
+      - REMOTION_MAX_MEDIA_BYTES=${REMOTION_MAX_MEDIA_BYTES:-67108864}
+      - REMOTION_MAX_JOB_STAGED_BYTES=${REMOTION_MAX_JOB_STAGED_BYTES:-268435456}
+      - REMOTION_MEDIA_FETCH_TIMEOUT_MS=${REMOTION_MEDIA_FETCH_TIMEOUT_MS:-30000}
+      - REMOTION_PROBE_TIMEOUT_MS=${REMOTION_PROBE_TIMEOUT_MS:-15000}
+      - FFPROBE_PATH=${FFPROBE_PATH:-ffprobe}
+      - FFMPEG_PATH=${FFMPEG_PATH:-ffmpeg}
       - REMOTION_BUNDLE_CACHE_MAX=${REMOTION_BUNDLE_CACHE_MAX:-32}
       - REMOTION_BUNDLE_CACHE_TTL_SECONDS=${REMOTION_BUNDLE_CACHE_TTL_SECONDS:-3600}
       - REMOTION_BROWSER_IDLE_TTL_SECONDS=${REMOTION_BROWSER_IDLE_TTL_SECONDS:-300}
@@ -197,7 +206,7 @@ services:
       timeout: 10s
       retries: 3
     depends_on:
-      - myloware
+      - aismr
 
 volumes:
   postgres_data:
@@ -212,11 +221,11 @@ volumes:
 #   docker compose up -d
 #
 # View logs:
-#   docker compose logs -f myloware
+#   docker compose logs -f aismr
 #
 # View traces (Jaeger):
 #   Open http://localhost:16686
-#   Select service: llama-stack or myloware
+#   Select service: llama-stack or aismr
 #
 # Stop all services:
 #   docker compose down

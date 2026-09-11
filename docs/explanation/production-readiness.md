@@ -36,7 +36,7 @@ workers execute workflow segments durably.
 
 Recommended knobs:
 - `WORKFLOW_DISPATCHER=db` (API enqueues durable jobs to Postgres)
-- Run `myloware worker run` in one or more worker processes
+- Run `aismr worker run` in one or more worker processes
 - Use shared artifact storage (`TRANSCODE_STORAGE_BACKEND=s3`) for multi-machine scale
 
 Why this is the “right next step”:

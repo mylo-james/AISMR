@@ -20,5 +20,5 @@ def test_config_show_prints_table(monkeypatch) -> None:
 
     result = CliRunner().invoke(cli, ["config", "show"])
     assert result.exit_code == 0
-    assert "MyloWare Configuration" in result.output
+    assert "AISMR Configuration" in result.output
     assert "http://localhost:5000" in result.output

@@ -1,1 +1,1 @@
-"""MyloWare CLI module."""
+"""AISMR CLI module."""

@@ -1,0 +1,20 @@
+name: monthly
+title: AISMR scene studio
+description: Twelve ordered original scenes for one visitor-supplied item. Visitors may choose a suggested catalog item, select Random, or type one item for normalization and moderation.
+workflow:
+  - ideator
+  - producer
+  - editor
+  - publisher
+hitl_gates:
+  - ideation
+  - publish
+metadata:
+  contract: scene-plan-v2
+  catalog: monthly/catalog.yaml
+  runtime_owner: myloware.workflows.langgraph.studio
+  service_owner: myloware.studio.service.StudioService
+  configuration_scope: >-
+    These role descriptions are not the scene execution path. The legacy persona
+    factory does not run scene visitor stages; the durable graph and
+    StudioService own stage transitions and effects.

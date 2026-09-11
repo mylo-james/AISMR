@@ -125,6 +125,145 @@ async def test_remotion_tool_infers_duration_for_template():
 
 
 @pytest.mark.asyncio
+async def test_remotion_monthly_submits_exact_service_contract() -> None:
+    captured = {}
+
+    async def capture_post(url, **kwargs):
+        captured["url"] = url
+        captured.update(kwargs["json"])
+        response = Mock()
+        response.json.return_value = {"job_id": "job-monthly", "status": "queued"}
+        response.raise_for_status = Mock()
+        return response
+
+    clips = [f"https://media.example/clips/{month}.mp4" for month in range(12)]
+    labels = [f"Item {month}" for month in range(12)]
+    narration_urls = [f"https://media.example/audio/{month}.mp3" for month in range(12)]
+    with (
+        patch("myloware.tools.remotion.settings") as mock_settings,
+        patch("httpx.AsyncClient") as mock_client_cls,
+    ):
+        mock_settings.remotion_provider = "real"
+        mock_settings.remotion_service_url = "http://render.local"
+        mock_settings.webhook_base_url = "https://api.example.com"
+        mock_client = AsyncMock()
+        mock_client.post = capture_post
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client_cls.return_value = mock_client
+
+        result = RemotionRenderTool(run_id="run-monthly").run_impl(
+            template="monthly",
+            clips=clips,
+            objects=labels,
+            narration_urls=narration_urls,
+            music_url="https://media.example/music.mp3",
+            duration_seconds=74,
+            fps=30,
+        )
+
+    assert result["status"] == "queued"
+    assert captured["template"] == "monthly"
+    assert captured["clips"] == clips
+    assert captured["objects"] == labels
+    assert captured["narration_urls"] == narration_urls
+    assert captured["music_url"] == "https://media.example/music.mp3"
+    assert "duration_frames" not in captured
+
+
+@pytest.mark.asyncio
+async def test_remotion_monthly_requires_portrait_aspect_ratio() -> None:
+    with patch("myloware.tools.remotion.settings") as mock_settings:
+        mock_settings.remotion_provider = "fake"
+        mock_settings.remotion_service_url = "http://localhost:3001"
+        mock_settings.webhook_base_url = "http://example.com"
+        tool = RemotionRenderTool(run_id="monthly-run")
+
+    with pytest.raises(ValueError, match="aspect_ratio=9:16"):
+        tool.run_impl(
+            template="monthly",
+            clips=["https://media.example/clip.mp4"] * 12,
+            objects=["item"] * 12,
+            aspect_ratio="16:9",
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("clips", "objects", "narration_urls", "music_url", "message"),
+    [
+        (["https://media.example/clip.mp4"] * 11, ["item"] * 12, None, None, "exactly 12 HTTP"),
+        (["https://media.example/clip.mp4"] * 12, ["item"] * 11, None, None, "non-empty item"),
+        (
+            ["https://media.example/clip.mp4"] * 12,
+            ["item"] * 12,
+            ["bad"] * 12,
+            None,
+            "narration_urls",
+        ),
+        (["https://media.example/clip.mp4"] * 12, ["item"] * 12, None, "bad", "music_url"),
+        (["http://media.example/clip.mp4"] * 12, ["item"] * 12, None, None, "HTTP"),
+        (["https://user:password@media.example/clip.mp4"] * 12, ["item"] * 12, None, None, "HTTP"),
+    ],
+)
+async def test_remotion_monthly_rejects_invalid_inputs(
+    clips, objects, narration_urls, music_url, message
+) -> None:
+    with patch("myloware.tools.remotion.settings") as mock_settings:
+        mock_settings.remotion_provider = "fake"
+        mock_settings.remotion_service_url = "http://localhost:3001"
+        mock_settings.webhook_base_url = "http://example.com"
+        tool = RemotionRenderTool(run_id="monthly-run")
+
+    with pytest.raises(ValueError, match=message):
+        tool.run_impl(
+            template="monthly",
+            clips=clips,
+            objects=objects,
+            narration_urls=narration_urls,
+            music_url=music_url,
+        )
+
+
+@pytest.mark.asyncio
+async def test_remotion_monthly_allows_loopback_http_urls() -> None:
+    with patch("myloware.tools.remotion.settings") as mock_settings:
+        mock_settings.remotion_provider = "fake"
+        mock_settings.remotion_service_url = "http://localhost:3001"
+        mock_settings.webhook_base_url = "http://example.com"
+        tool = RemotionRenderTool(run_id="monthly-run")
+
+    result = tool.run_impl(
+        template="monthly",
+        clips=["http://127.0.0.1:8080/clip.mp4"] * 12,
+        objects=["item"] * 12,
+    )
+    assert result["status"] == "queued"
+
+
+def test_remotion_rejects_unknown_arguments() -> None:
+    with patch("myloware.tools.remotion.settings") as mock_settings:
+        mock_settings.remotion_provider = "fake"
+        mock_settings.remotion_service_url = "http://localhost:3001"
+        mock_settings.webhook_base_url = "http://example.com"
+        tool = RemotionRenderTool(run_id="run-123")
+
+    with pytest.raises(TypeError, match="unexpected keyword"):
+        tool.run_impl(
+            composition_code="export const RemotionComposition = () => null;",
+            clips=["https://example.com/clip.mp4"],
+            arbitrary_audio="https://example.com/audio.mp3",
+        )
+
+    with pytest.raises(ValueError, match="only by the monthly"):
+        tool.run_impl(
+            template="aismr",
+            clips=["https://example.com/clip.mp4"],
+            narration_urls=["https://example.com/narration.mp3"],
+        )
+
+
+@pytest.mark.asyncio
 async def test_remotion_template_rejects_non_30fps():
     with patch("myloware.tools.remotion.settings") as mock_settings:
         mock_settings.remotion_provider = "fake"

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "id": "monthly-saved-voice-v2",
+  "render_contract": "scene-v2",
+  "template": "monthly",
+  "scene_count": 12,
+  "month_bank_id": "teacup-whisper-months-v1",
+  "month_bank_sha256": "41b05666f6fcf7ca2c68c88ee7bfe36ae7463c727154c7633eefe13d5ed7e0df",
+  "voice_profile_sha256": "99bb477d104635a8dae416d7e90a2ae35402a0ac19fa939b48f49674918e6d3a",
+  "join_pause_seconds": 0,
+  "segment_frames": 202,
+  "fps": 30,
+  "narration_start_frames": 18
+}

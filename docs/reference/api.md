@@ -153,7 +153,7 @@ Expected event envelope (minimum fields we rely on):
 
 Supported event types: `video.completed`, `video.failed`.
 
-On `video.completed`, MyloWare downloads the MP4 via `GET /v1/videos/{id}/content`
+On `video.completed`, AISMR downloads the MP4 via `GET /v1/videos/{id}/content`
 using the OpenAI API key, then transcodes and resumes the workflow.
 
 Captured contract examples (dashboard test webhooks):

@@ -1142,6 +1142,8 @@ async def test_repair_sora_clips_happy_path(monkeypatch) -> None:
         return ["task-new"], {"task-new": {"video_index": 1, "topic": "t1"}}, None
 
     monkeypatch.setattr(wf.settings, "sora_provider", "real")
+    # Submission is stubbed below; constructor validation still requires a test key.
+    monkeypatch.setattr(wf.settings, "openai_api_key", "unit-test-key")
     monkeypatch.setattr(wf.settings, "use_fake_providers", False)
     monkeypatch.setattr(
         wf, "get_async_session_factory", lambda: _fake_async_session_factory(session)

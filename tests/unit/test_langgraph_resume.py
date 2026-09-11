@@ -28,8 +28,14 @@ class FakeArtifactRepo:
 
 
 class FakeRunRepo:
-    def __init__(self) -> None:
+    def __init__(self, workflow_name: str | None = "motivational") -> None:
+        self.workflow_name = workflow_name
         self.updates: list[tuple[UUID, dict[str, object]]] = []
+
+    async def get_async(self, run_id: UUID):  # type: ignore[no-untyped-def]
+        if self.workflow_name is None:
+            return None
+        return SimpleNamespace(id=run_id, workflow_name=self.workflow_name)
 
     async def update_async(self, run_id: UUID, **kwargs):  # type: ignore[no-untyped-def]
         self.updates.append((run_id, kwargs))
@@ -95,6 +101,72 @@ async def test_resume_after_videos_invokes_graph(monkeypatch) -> None:
 
     assert graph.invoked == 1
     assert run_repo.updates == []
+
+
+@pytest.mark.asyncio
+async def test_resume_after_videos_rejects_monthly_before_graph_or_run_mutation(
+    monkeypatch,
+) -> None:
+    from myloware.workflows.admission import StudioAdmissionRequiredError
+
+    run_id = uuid4()
+    run_repo = FakeRunRepo(workflow_name="monthly")
+    session = FakeSession()
+
+    class FakeGraph:
+        invoked = 0
+
+        async def aget_state(self, _config):  # type: ignore[no-untyped-def]
+            FakeGraph.invoked += 1
+            raise AssertionError("monthly guard must run before graph state reads")
+
+    monkeypatch.setenv("AISMR_ENABLED", "true")
+    monkeypatch.setattr(resume_mod, "get_graph", lambda: FakeGraph())
+    monkeypatch.setattr(resume_mod, "RunRepository", lambda _s: run_repo)
+    monkeypatch.setattr(
+        resume_mod, "get_async_session_factory", lambda: (lambda: FakeSessionCM(session))
+    )
+
+    with pytest.raises(StudioAdmissionRequiredError, match="studio_admission_required"):
+        await resume_mod.resume_after_videos(run_id, raise_on_error=True)
+
+    assert FakeGraph.invoked == 0
+    assert run_repo.updates == []
+    assert session.commits == 0
+
+
+@pytest.mark.asyncio
+async def test_resume_after_render_rejects_monthly_before_graph_or_run_mutation(
+    monkeypatch,
+) -> None:
+    from myloware.workflows.admission import StudioAdmissionRequiredError
+
+    run_id = uuid4()
+    run_repo = FakeRunRepo(workflow_name="monthly")
+    session = FakeSession()
+
+    class FakeGraph:
+        invoked = 0
+
+        async def aget_state(self, _config):  # type: ignore[no-untyped-def]
+            FakeGraph.invoked += 1
+            raise AssertionError("monthly guard must run before graph state reads")
+
+    monkeypatch.setenv("AISMR_ENABLED", "true")
+    monkeypatch.setattr(resume_mod, "get_graph", lambda: FakeGraph())
+    monkeypatch.setattr(resume_mod, "RunRepository", lambda _s: run_repo)
+    monkeypatch.setattr(
+        resume_mod, "get_async_session_factory", lambda: (lambda: FakeSessionCM(session))
+    )
+
+    with pytest.raises(StudioAdmissionRequiredError, match="studio_admission_required"):
+        await resume_mod.resume_after_render(
+            run_id, "https://example.com/out.mp4", raise_on_error=True
+        )
+
+    assert FakeGraph.invoked == 0
+    assert run_repo.updates == []
+    assert session.commits == 0
 
 
 @pytest.mark.asyncio

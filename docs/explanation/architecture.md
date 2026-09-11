@@ -1,14 +1,14 @@
 # Architecture
 
-> **Explanation**: This document explains *how* MyloWare is designed and *why* those decisions were made. For the evolution from v1 to v2, see [Why Llama Stack](why-llama-stack.md).
+> **Explanation**: This document explains *how* AISMR is designed and *why* those decisions were made. For the evolution from v1 to v2, see [Why Llama Stack](why-llama-stack.md).
 
-How MyloWare is designed and why.
+How AISMR is designed and why.
 
 ---
 
 ## Overview
 
-MyloWare is a multi-agent video production platform. Users submit a brief, agents collaborate to produce a video, and the result is published to TikTok.
+AISMR is a multi-agent video production platform. Users submit a brief, agents collaborate to produce a video, and the result is published to TikTok.
 
 ```
 User Brief → Supervisor → Ideator → Producer → Editor → Publisher → TikTok
@@ -22,7 +22,7 @@ User Brief → Supervisor → Ideator → Producer → Editor → Publisher → 
 
 ### Llama Stack Native
 
-MyloWare uses [Llama Stack](https://github.com/meta-llama/llama-stack) as its only AI framework. No LangChain, no additional abstractions.
+AISMR uses [Llama Stack](https://github.com/meta-llama/llama-stack) as its only AI framework. No LangChain, no additional abstractions.
 
 **Why**: Single API surface for inference, tools, RAG, safety, and telemetry. Swap providers (Together AI → Ollama) without code changes.
 
