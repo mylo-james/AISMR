@@ -22,6 +22,8 @@ jobs:
     env:
       PYTHONPATH: src
       USE_FAKE_PROVIDERS: 'true'
+      # Use Ubuntu's trust store with the uv-managed Python interpreter.
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
     services:
       postgres:
         image: postgres:15
@@ -47,7 +49,9 @@ jobs:
         with:
           node-version: '22'
       - name: Install locked dependencies
-        run: uv sync --locked --extra dev --extra hosted
+        run: |
+          test -s "$SSL_CERT_FILE"
+          uv sync --locked --extra dev --extra hosted
       - name: Check source
         run: |
           uv run --no-sync ruff check src/ tests/ app.py queue_worker.py
