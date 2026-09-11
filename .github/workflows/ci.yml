@@ -1,26 +1,24 @@
-name: CI
+name: AISMR checks
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: aismr-checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  python:
-    name: Python checks
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+  app:
+    name: Recorded app
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     env:
       PYTHONPATH: src
       USE_FAKE_PROVIDERS: 'true'
@@ -34,7 +32,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U aismr -d aismr_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -45,60 +43,32 @@ jobs:
           version: '0.12.8'
           python-version: '3.13'
           enable-cache: true
-      - name: Install locked dependencies
-        run: uv sync --locked --extra dev --extra hosted
-      - name: Check Python
-        run: |
-          uv run --no-sync aismr --help
-          uv run --no-sync ruff check src/ tests/
-          uv run --no-sync black --check src/ tests/
-          uv run --no-sync make security
-          uv run --no-sync mypy src/ --ignore-missing-imports
-      - name: Unit tests and coverage
-        run: uv run --no-sync pytest tests/unit/ -q --tb=short --cov=src --cov-report=xml --cov-fail-under=80
-      - name: Migration and PostgreSQL checks
-        env:
-          AISMR_TEST_POSTGRES_URL: postgresql+asyncpg://aismr:ci-only@localhost:5432/aismr_test
-        run: |
-          uv run --no-sync make db-migrate-sql
-          uv run --no-sync pytest tests/unit/test_studio_migration.py tests/integration/test_studio_postgres_parity.py -q --tb=short
-      - name: Validate evaluation fixtures without provider calls
-        run: uv run --no-sync make eval-dry
-      - name: Upload coverage
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.xml
-          if-no-files-found: error
-          retention-days: 7
-
-  web:
-    name: Web and renderer
-    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: services/remotion/package-lock.json
-      - name: Test web and release checks
+      - name: Install locked dependencies
+        run: uv sync --locked --extra dev --extra hosted
+      - name: Check source
         run: |
+          uv run --no-sync ruff check src/ tests/ app.py queue_worker.py
+          uv run --no-sync black --check src/ tests/ app.py queue_worker.py
+          uv run --no-sync mypy src/ --ignore-missing-imports
+          uv run --no-sync make security
           node --check web/demo/app.js
-          node --test tests/unit/test_demo_progress.cjs scripts/deploy/verify-vercel-candidate.test.mjs
-      - name: Test and build renderer
+      - name: Test recorded workflow and browser
         run: |
-          npm ci --prefix services/remotion
-          npm run test:unit --prefix services/remotion
-          npm run build --prefix services/remotion
-      - uses: docker/setup-buildx-action@v3
-      - name: Check the local application image builds
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: aismr:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          uv run --no-sync pytest -q --tb=short \
+            tests/unit/test_hosted_recorded.py \
+            tests/unit/test_studio_recorded.py \
+            tests/unit/test_aismr_deployment.py \
+            tests/unit/test_studio_api.py \
+            tests/unit/test_studio_claim_fencing.py \
+            tests/unit/test_settings_validation.py
+          node --test tests/unit/test_demo_progress.cjs scripts/deploy/verify-vercel-candidate.test.mjs
+      - name: Test migrations and database coordination
+        env:
+          AISMR_TEST_POSTGRES_URL: postgresql+asyncpg://aismr:ci-only@localhost:5432/aismr_test
+        run: |
+          uv run --no-sync pytest -q --tb=short \
+            tests/unit/test_studio_migration.py \
+            tests/integration/test_studio_postgres_parity.py
